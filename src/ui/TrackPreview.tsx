@@ -14,6 +14,7 @@ interface Props {
 /** Seconds per full turn when nobody is dragging */
 const ORBIT_PERIOD = 48;
 const FRAME_MS = 1000 / 30;
+/** The e2e tests run on software WebGL, many at once: there the preview is the road alone, drawn plainly */
 const E2E = import.meta.env.VITE_E2E === 'true';
 
 /**
@@ -25,7 +26,7 @@ let shared: THREE.WebGLRenderer | null | undefined;
 function previewRenderer(): THREE.WebGLRenderer | null {
   if (shared !== undefined) return shared;
   try {
-    shared = new THREE.WebGLRenderer({ antialias: true });
+    shared = new THREE.WebGLRenderer({ antialias: !E2E });
     styleRenderer(shared);
     shared.domElement.className = 'track-preview-gl';
   } catch {
@@ -72,7 +73,7 @@ export function TrackPreview({ track, fill = false }: Props) {
 
 /** Show `track` in `el` with the shared renderer; returns the teardown */
 function show(el: HTMLElement, renderer: THREE.WebGLRenderer, track: TrackData): () => void {
-  const view = buildTrackScene(track, { scenery: settings.get().quality === 'high' ? 'medium' : 'low', markers: true });
+  const view = buildTrackScene(track, { scenery: E2E ? null : settings.get().quality === 'high' ? 'medium' : 'low', markers: true });
   const camera = new THREE.PerspectiveCamera(36, 1, 1, 10000);
   let yaw = Math.PI / 5;
   let pitch = 0.82;
@@ -103,7 +104,7 @@ function show(el: HTMLElement, renderer: THREE.WebGLRenderer, track: TrackData):
   const size = () => {
     const w = el.clientWidth || 300;
     const h = el.clientHeight || 200;
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setPixelRatio(E2E ? 1 : Math.min(2, window.devicePixelRatio || 1));
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     redraw();

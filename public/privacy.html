@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diff Race Privacy Policy</title>
+  <meta name="description" content="What data Diff Race collects, how it is used, and how long it is kept.">
+  <style>
+    :root { --bg: #0d0f12; --card: #15181d; --line: #2b3038; --text: #ece9e4; --muted: #8d9199; --accent: #ff7a1a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+    a { color: var(--accent); }
+    h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: 1px; }
+    h2 { font-size: 19px; margin: 32px 0 8px; }
+    p, li { color: #d3d0ca; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 22px 18px; margin-top: 20px; overflow-x: auto; }
+    nav { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 28px; font-size: 14px; }
+    nav .home { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; margin-right: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 15px; }
+    th, td { text-align: left; padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-top: none; }
+    code { background: rgba(255, 255, 255, 0.08); padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<main>
+  <nav><a href="/" class="home"><img src="/brand/logo.svg" alt="" width="28" height="28">Diff Race</a><a href="/terms.html">Terms of Service</a><a href="/privacy.html">Privacy Policy</a><a href="/models/CREDITS.txt">Credits</a></nav>
+  <h1>Privacy Policy</h1>
+  <p class="muted">Diff Race · Last updated October 16, 2026</p>
+
+  <p>Diff Race is a small free multiplayer car-combat racing game, playable on its website
+  (<a href="https://diff-race.netlify.app">diff-race.netlify.app</a>) and as a Discord Activity. This policy explains
+  what data the game uses. In short: what's needed to race together while you're in a room, plus a public leaderboard
+  of room-race results; never sold, and never used for ads.</p>
+
+  <div class="card">
+    <h2>What we collect and why</h2>
+    <table>
+      <tr><th>Data</th><th>Why</th><th>How long</th></tr>
+      <tr><td><strong>Your driver name</strong>: typed on the website, or your Discord display name in the Discord Activity</td>
+          <td>Shown to the other drivers in your room (standings, name tags, the kill feed) and on the leaderboard</td>
+          <td>In a room: until you leave it. On the leaderboard: see below</td></tr>
+      <tr><td><strong>Race data</strong>: your car's position, speed, turret aim, armour, damage dealt, kills, lap and finish times, and in-race events such as wrecks, missiles and dropped hazards</td>
+          <td>Needed to sync the race between drivers</td>
+          <td>Until you leave the room; events are deleted after about 3 seconds, hazards when they run out</td></tr>
+      <tr><td><strong>Room details</strong>: the room's name and code, its track settings, the names of who's in it, and its last race's results</td>
+          <td>To list open rooms, let others join, and show how the last race finished</td>
+          <td>Deleted when the last driver leaves the room</td></tr>
+      <tr><td><strong>Leaderboard entry</strong>: an identifier (a random one made by your browser, or your Discord user ID in the Activity), your driver name, and your races, podiums, wins, kills and score from room races</td>
+          <td>The public global leaderboard</td>
+          <td>Kept until you ask us to remove it</td></tr>
+      <tr><td><strong>Discord account basics</strong> (Discord Activity only): your Discord user ID, username and display name, via the <code>identify</code> permission; and the <code>rpc.activities.write</code> permission</td>
+          <td>To sign you in and show your name; your user ID is your leaderboard identifier; the second permission shows your race (for example "Lap 2/3 · 3rd") as your Discord activity status</td>
+          <td>Only your display name and user ID are stored (see above); the access token isn't kept</td></tr>
+      <tr><td><strong>Settings on your device</strong>: your driver name, controls, video and sound settings, best lap times per track, and your browser's leaderboard identifier</td>
+          <td>So the game remembers you and your preferences</td>
+          <td>In your browser's local storage until you clear it</td></tr>
+    </table>
+  </div>
+
+  <h2>What we don't do</h2>
+  <ul>
+    <li>No ads, no analytics or tracking scripts, and no cookies.</li>
+    <li>We don't sell or share your data with anyone beyond the services below that run the game.</li>
+    <li>We don't access your Discord messages, servers, friends list or email address.</li>
+  </ul>
+
+  <h2>Services that process data for us</h2>
+  <ul>
+    <li><strong>Google Firebase Realtime Database</strong> (Singapore region) stores the room, race and leaderboard data
+      described above. See <a href="https://firebase.google.com/support/privacy">Firebase's privacy information</a>.</li>
+    <li><strong>Netlify</strong> hosts the website and the small server function used for Discord sign-in. Like any web
+      host, it processes technical request data such as IP addresses. See <a href="https://www.netlify.com/privacy/">Netlify's privacy policy</a>.</li>
+    <li><strong>Discord</strong>, when you play the Activity. Discord's own <a href="https://discord.com/privacy">Privacy Policy</a> applies to your use of Discord.</li>
+  </ul>
+
+  <h2>Who can see your data</h2>
+  <p>Everything in a room (your name and race data) is visible to the other drivers in it, the list of open rooms is
+  public, and so is the leaderboard. Please don't use personal information such as your real full name as your driver name.</p>
+
+  <h2>Children</h2>
+  <p>The game is not directed at children under 13. Discord requires its users to be at least 13 (or older where local
+  law requires).</p>
+
+  <h2>Your choices</h2>
+  <p>You can leave a room at any time, which removes your data from it. You can clear the game's saved settings by
+  clearing your browser's site data. To ask about your data, or to have your leaderboard entry removed, message
+  <strong>thejenos</strong> on Discord.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the updated version will be posted on this page with a new date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about privacy: message <strong>thejenos</strong> on Discord.</p>
+</main>
+</body>
+</html>

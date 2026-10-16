@@ -13,6 +13,9 @@ import { placeOnTrack } from '../game/race/placement';
  * the start and the pads so they read from up there. The camera orbits its middle.
  */
 
+/** At night the lights are on: this many floodlights lit (spread round the loop), and a moon over it all */
+const FLOODLIGHTS = 8;
+
 /** Marker colours: the start, sword pads, shield pads, skull traps, ramps */
 const MARK = { start: 0xffffff, sword: 0xff3a20, shield: 0x2a7bff, skull: 0x9cff3a, ramp: 0xff9a1a };
 
@@ -40,8 +43,29 @@ export function buildTrackScene(track: TrackData, opts: { scenery: 'low' | 'medi
   const centre = new THREE.Vector3((b.minX + b.maxX) / 2, b.minY, (b.minZ + b.maxZ) / 2);
   const radius = Math.max(b.maxX - b.minX, b.maxZ - b.minZ) * 0.5 + track.verge + 20;
 
-  // Markers: a glowing post over each pad and ramp, a taller one over the start line.
   const disposables: { dispose(): void }[] = [];
+  // A night track, seen from up here, is lit the way the race lights it near the car: the
+  // floodlights on (a warm pool under each), and moonlight and a fill so the whole loop reads.
+  if (palette.night) {
+    const moon = new THREE.DirectionalLight(0xb8c6ff, 1.8);
+    moon.position.set(centre.x + radius * 0.4, centre.y + radius, centre.z + radius * 0.6);
+    moon.target.position.copy(centre);
+    const fill = new THREE.HemisphereLight(0x6a78a8, 0x2a1a10, 1.3);
+    scene.add(moon, moon.target, fill);
+    disposables.push(moon, fill);
+    // The floodlights' heads, as the scenery stands them (sceneryMesh.ts): 12.5 m up, leaning to the road.
+    const heads = track.scenery.filter((p) => p.kind === 'floodlight');
+    const lit = Math.min(FLOODLIGHTS, heads.length);
+    for (let i = 0; i < lit; i++) {
+      const h = heads[Math.floor((i * heads.length) / lit)]!;
+      const l = new THREE.PointLight(0xffd9a0, 2200, 130, 1.4);
+      l.position.set(h.x + h.fx * 0.6, h.y + 11.5, h.z + h.fz * 0.6);
+      scene.add(l);
+      disposables.push(l);
+    }
+  }
+
+  // Markers: a glowing post over each pad and ramp, a taller one over the start line.
   if (opts.markers) {
     const posts = new THREE.Group();
     const pos = { x: 0, y: 0, z: 0 };
@@ -72,7 +96,7 @@ export function buildTrackScene(track: TrackData, opts: { scenery: 'low' | 'medi
       // Far enough that the whole loop fits the narrower side of the view.
       const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
       const fit = Math.min(halfFov, Math.atan(Math.tan(halfFov) * camera.aspect));
-      const dist = (radius / Math.sin(fit)) * 0.92 * zoom;
+      const dist = (radius / Math.sin(fit)) * 0.74 * zoom;
       camera.position.set(
         centre.x + Math.sin(yaw) * Math.cos(pitch) * dist,
         centre.y + Math.sin(pitch) * dist,

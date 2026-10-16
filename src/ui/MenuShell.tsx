@@ -56,7 +56,9 @@ export function MenuFrame({ id = 'lobby', profile, discord, onSettings, foot, ba
                 <span className="icon" aria-hidden="true">⚙</span>Settings
               </button>
             )}
-            <p className="legal muted"><a href="/models/CREDITS.txt" target="_blank" rel="noreferrer">Credits</a></p>
+            <p className="legal muted">
+              <a href="/terms.html" target="_blank" rel="noreferrer">Terms</a> · <a href="/privacy.html" target="_blank" rel="noreferrer">Privacy</a> · <a href="/models/CREDITS.txt" target="_blank" rel="noreferrer">Credits</a>
+            </p>
           </footer>
         )}
       </div>

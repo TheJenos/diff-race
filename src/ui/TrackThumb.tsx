@@ -38,7 +38,7 @@ function thumbRenderer(): THREE.WebGLRenderer | null {
   clearTimeout(idle);
   if (renderer !== undefined) return renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: import.meta.env.VITE_E2E !== 'true' });
     styleRenderer(renderer);
   } catch {
     renderer = null;
@@ -67,14 +67,16 @@ function thumbnail(track: TrackData, size: number): Promise<string> {
     if (again) return again;
     await loadModels();
     const r = thumbRenderer();
-    const px = Math.round(size * Math.min(2, window.devicePixelRatio || 1));
+    // Drawn at twice the size at least, and shown smaller: smooth edges at any pixel density.
+    const px = Math.round(size * Math.max(2, Math.min(3, window.devicePixelRatio || 1)));
     let url: string;
     if (r) {
       r.setPixelRatio(1);
       r.setSize(px, px, false);
-      const view = buildTrackScene(track, { scenery: 'low', markers: false });
+      // No scenery at this size (it's noise): the road's shape, seen steeply, the whole loop in view.
+      const view = buildTrackScene(track, { scenery: null, markers: false });
       const camera = new THREE.PerspectiveCamera(34, 1, 1, 10000);
-      view.aim(camera, Math.PI / 5, 0.95, 0.95);
+      view.aim(camera, Math.PI / 5, 1.15, 1.3);
       r.render(view.scene, camera);
       // Copied in the same task as the draw (the canvas isn't kept between frames).
       url = r.domElement.toDataURL('image/png');

@@ -16,9 +16,10 @@ import { randomSeed } from './seeds';
  * Behind the menus: a slow flight along a real generated track, as it looks in the race (its sky,
  * light, barriers and scenery), low over the road and weaving a little. Kept cheap, as Arena FPS's
  * is: below full resolution, at most 30 frames a second, nothing while the tab is hidden. On touch
- * screens, on low quality, with reduced motion (and in the e2e tests) it's a single still frame,
- * and with no WebGL at all the gradient behind it shows. It waits its turn: the track is built
- * only once the page has been idle a moment (`delay`), so the menu's first moments never wait on it.
+ * screens, on low quality and with reduced motion it's a single still frame; with no WebGL at all
+ * (and in the e2e tests, many at once on software WebGL) the gradient behind it shows. It waits its
+ * turn: the track is built only once the page has been idle a moment (`delay`), so the menu's first
+ * moments never wait on it.
  */
 
 /** Speed along the road (m/s), height over it (m), and how far ahead it looks (m) */
@@ -54,6 +55,7 @@ export function MenuBackdrop({ delay = 1200 }: { delay?: number }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    if (E2E) return;
     let idle = 0;
     const timer = setTimeout(() => {
       if (typeof requestIdleCallback === 'function') idle = requestIdleCallback(() => setReady(true), { timeout: 2000 });
@@ -101,7 +103,7 @@ function fly(host: HTMLElement, track: TrackData, onShown: () => void): () => vo
     return () => {};
   }
   const quality = settings.get().quality;
-  const still = () => E2E || TOUCH || reducedMotion() || settings.get().quality === 'low';
+  const still = () => TOUCH || reducedMotion() || settings.get().quality === 'low';
   renderer.setPixelRatio(Math.min(1, window.devicePixelRatio || 1) * (quality === 'high' ? 1 : 0.75));
   renderer.domElement.className = 'menu-backdrop-gl';
   host.appendChild(renderer.domElement);

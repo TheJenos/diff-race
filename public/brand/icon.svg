@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- The app icon: the logo mark on the menus' dark ground, with a warm glow behind it -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="58%" r="60%">
+      <stop offset="0" stop-color="#3a1d0c"/>
+      <stop offset="1" stop-color="#0d0f12"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <g transform="translate(152 140) scale(5.625)">
+    <path d="M64 14 L116 106 H12 Z" fill="none" stroke="#ff7a1a" stroke-width="12" stroke-linejoin="round"/>
+    <circle cx="52" cy="72" r="6" fill="#ff7a1a"/>
+    <circle cx="76" cy="72" r="6" fill="#ff7a1a"/>
+    <path d="M50 88 h28 l-4 8 h-20 z" fill="#ff7a1a"/>
+  </g>
+</svg>
