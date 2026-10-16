@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "cars": [
+    {
+      "id": "sedan-sports",
+      "file": "cars/sedan-sports.glb",
+      "wheels": {
+        "fl": [
+          -0.425,
+          0.3,
+          -0.66
+        ],
+        "fr": [
+          0.425,
+          0.3,
+          -0.66
+        ],
+        "rl": [
+          -0.425,
+          0.3,
+          0.66
+        ],
+        "rr": [
+          0.425,
+          0.3,
+          0.66
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.65,
+          0.15,
+          -1.25
+        ],
+        "max": [
+          0.65,
+          1.1,
+          1.3
+        ]
+      },
+      "roof": 1.1,
+      "triangles": 2088
+    },
+    {
+      "id": "race",
+      "file": "cars/race.glb",
+      "wheels": {
+        "fl": [
+          -0.5,
+          0.3,
+          -0.64
+        ],
+        "fr": [
+          0.5,
+          0.3,
+          -0.64
+        ],
+        "rl": [
+          -0.5,
+          0.3,
+          0.88
+        ],
+        "rr": [
+          0.5,
+          0.3,
+          0.88
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.6,
+          0.1,
+          -1.28
+        ],
+        "max": [
+          0.6,
+          0.733,
+          1.28
+        ]
+      },
+      "roof": 0.733,
+      "triangles": 1952
+    },
+    {
+      "id": "hatchback-sports",
+      "file": "cars/hatchback-sports.glb",
+      "wheels": {
+        "fl": [
+          -0.425,
+          0.3,
+          -0.81
+        ],
+        "fr": [
+          0.425,
+          0.3,
+          -0.81
+        ],
+        "rl": [
+          -0.425,
+          0.3,
+          0.81
+        ],
+        "rr": [
+          0.425,
+          0.3,
+          0.81
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.65,
+          0.15,
+          -1.4
+        ],
+        "max": [
+          0.65,
+          1.1,
+          1.45
+        ]
+      },
+      "roof": 1.1,
+      "triangles": 2088
+    },
+    {
+      "id": "suv",
+      "file": "cars/suv.glb",
+      "wheels": {
+        "fl": [
+          -0.425,
+          0.3,
+          -0.76
+        ],
+        "fr": [
+          0.425,
+          0.3,
+          -0.76
+        ],
+        "rl": [
+          -0.425,
+          0.3,
+          0.56
+        ],
+        "rr": [
+          0,
+          0.7,
+          1.175
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.75,
+          0.2,
+          -1.35
+        ],
+        "max": [
+          0.75,
+          1.3,
+          1.2
+        ]
+      },
+      "roof": 1.3,
+      "triangles": 2142
+    },
+    {
+      "id": "police",
+      "file": "cars/police.glb",
+      "wheels": {
+        "fl": [
+          -0.45,
+          0.3,
+          -0.81
+        ],
+        "fr": [
+          0.45,
+          0.3,
+          -0.81
+        ],
+        "rl": [
+          -0.45,
+          0.3,
+          0.81
+        ],
+        "rr": [
+          0.45,
+          0.3,
+          0.81
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.75,
+          0.187,
+          -1.55
+        ],
+        "max": [
+          0.75,
+          1.3,
+          1.55
+        ]
+      },
+      "roof": 1.3,
+      "triangles": 2304
+    },
+    {
+      "id": "taxi",
+      "file": "cars/taxi.glb",
+      "wheels": {
+        "fl": [
+          -0.45,
+          0.3,
+          -0.76
+        ],
+        "fr": [
+          0.45,
+          0.3,
+          -0.76
+        ],
+        "rl": [
+          -0.45,
+          0.3,
+          0.76
+        ],
+        "rr": [
+          0.45,
+          0.3,
+          0.76
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.75,
+          0.15,
+          -1.35
+        ],
+        "max": [
+          0.75,
+          1.5,
+          1.4
+        ]
+      },
+      "roof": 1.5,
+      "triangles": 2072
+    },
+    {
+      "id": "race-future",
+      "file": "cars/race-future.glb",
+      "wheels": {
+        "fl": [
+          -0.45,
+          0.3,
+          -0.59
+        ],
+        "fr": [
+          0.45,
+          0.3,
+          -0.59
+        ],
+        "rl": [
+          -0.45,
+          0.3,
+          0.93
+        ],
+        "rr": [
+          0.45,
+          0.3,
+          0.93
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.6,
+          0.2,
+          -1.33
+        ],
+        "max": [
+          0.6,
+          0.833,
+          1.33
+        ]
+      },
+      "roof": 0.833,
+      "triangles": 2068
+    },
+    {
+      "id": "sedan",
+      "file": "cars/sedan.glb",
+      "wheels": {
+        "fl": [
+          -0.425,
+          0.3,
+          -0.66
+        ],
+        "fr": [
+          0.425,
+          0.3,
+          -0.66
+        ],
+        "rl": [
+          -0.425,
+          0.3,
+          0.66
+        ],
+        "rr": [
+          0.425,
+          0.3,
+          0.66
+        ]
+      },
+      "wheelRadius": 0.3,
+      "body": {
+        "min": [
+          -0.75,
+          0.15,
+          -1.25
+        ],
+        "max": [
+          0.75,
+          1.3,
+          1.3
+        ]
+      },
+      "roof": 1.3,
+      "triangles": 2032
+    }
+  ],
+  "props": {
+    "container": {
+      "file": "props/container.glb",
+      "tinted": true,
+      "triangles": 402
+    },
+    "containerStack": {
+      "file": "props/containerStack.glb",
+      "tinted": true,
+      "triangles": 1206
+    },
+    "warehouse": {
+      "file": "props/warehouse.glb",
+      "tinted": false,
+      "triangles": 2062
+    },
+    "smokestack": {
+      "file": "props/smokestack.glb",
+      "tinted": false,
+      "triangles": 160
+    },
+    "silo": {
+      "file": "props/silo.glb",
+      "tinted": false,
+      "triangles": 968
+    },
+    "grandstand": {
+      "file": "props/grandstand.glb",
+      "tinted": false,
+      "triangles": 672
+    }
+  }
+}

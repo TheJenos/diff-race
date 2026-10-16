@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Rng > rolls the same sequence for the same seed, on every engine 1`] = `
+[
+  0.774412042228505,
+  0.5255159924272448,
+  0.05622145859524608,
+  0.2483200349379331,
+  0.6989965829998255,
+  0.8505090952385217,
+]
+`;

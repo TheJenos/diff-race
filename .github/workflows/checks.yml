@@ -1,0 +1,55 @@
+# Fast checks with no emulator or browser: types, the architecture rules, the unit tests (track
+# maths, car feel on Rapier's Node build, race rules, camera) and the track generator over many seeds.
+name: Checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - scripts/**
+      - e2e/**
+      - package.json
+      - package-lock.json
+      - tsconfig.json
+      - vitest.config.ts
+      - .github/workflows/checks.yml
+  pull_request:
+    paths:
+      - src/**
+      - scripts/**
+      - e2e/**
+      - package.json
+      - package-lock.json
+      - tsconfig.json
+      - vitest.config.ts
+      - .github/workflows/checks.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Types, architecture and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run check:arch
+      - run: npm test
+      # Every track over many seeds: valid, deterministic, no engine-dependent maths, unchanged
+      # unless GENERATOR_VERSION was bumped.
+      - run: npm run test:tracks
+      # Bots race on generated tracks with no screen: they finish, don't get stuck, and skill shows.
+      - run: npm run sim:bots -- --seeds 4 --lengths s,m,l --laps 2 --bots 6

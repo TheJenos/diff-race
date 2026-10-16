@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Diff Race">
+  <path d="M64 14 L116 106 H12 Z" fill="none" stroke="#ff7a1a" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="52" cy="72" r="6" fill="#ff7a1a"/>
+  <circle cx="76" cy="72" r="6" fill="#ff7a1a"/>
+  <path d="M50 88 h28 l-4 8 h-20 z" fill="#ff7a1a"/>
+</svg>

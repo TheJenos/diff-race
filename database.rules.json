@@ -1,0 +1,160 @@
+{
+  "rules": {
+    "lobby": {
+      ".read": true,
+      "$room": {
+        ".write": "$room.matches(/^[A-Z0-9]{4,10}$/)",
+        ".validate": "newData.hasChildren(['name', 'hostId', 'createdAt']) || !newData.exists()",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 32" },
+        "hostId": { ".validate": "newData.isString() && newData.val().length <= 16" },
+        "host": { ".validate": "newData.isString() && newData.val().length <= 16" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "racing": { ".validate": "newData.isBoolean()" },
+        "members": {
+          "$pid": { ".validate": "$pid.matches(/^[A-Z0-9]{12}$/) && newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" }
+        },
+        "seed": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+        "length": { ".validate": "newData.val() === 's' || newData.val() === 'm' || newData.val() === 'l'" },
+        "theme": { ".validate": "newData.val() === 'docks' || newData.val() === 'quarry' || newData.val() === 'foundry'" },
+        "gen": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000" },
+        "laps": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9" },
+        "bots": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 11" },
+        "skill": { ".validate": "newData.val() === 'mixed' || newData.val() === 'easy' || newData.val() === 'normal' || newData.val() === 'hard' || newData.val() === 'expert'" },
+        "crash": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2" },
+        "armour": { ".validate": "newData.isNumber() && newData.val() >= 50 && newData.val() <= 300" },
+        "weapons": { ".validate": "newData.isBoolean()" },
+        "elim": { ".validate": "newData.isBoolean()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "rooms": {
+      "$room": {
+        ".read": true,
+        ".write": "$room.matches(/^[A-Z0-9]{4,10}$/) && !newData.exists()",
+        "players": {
+          "$pid": {
+            ".write": "$pid.matches(/^[A-Z0-9]{12}$/)",
+            ".validate": "newData.hasChildren(['name', 'c']) || !newData.exists()",
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+            "c": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 7" },
+            "n": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "p": { ".validate": "newData.isString() && newData.val().matches(/^[-0-9a-z.]{1,200}$/)" },
+            "t": { ".validate": "newData.isNumber()" },
+            "d": { "$target": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" } },
+            "k": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+            "f": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3600000" },
+            "$other": { ".validate": false }
+          }
+        },
+        "bots": {
+          "$bid": {
+            ".write": "$bid.matches(/^b_[0-9]{1,2}$/)",
+            ".validate": "newData.hasChildren(['name', 'c']) || !newData.exists()",
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+            "c": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 7" },
+            "n": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "p": { ".validate": "newData.isString() && newData.val().matches(/^[-0-9a-z.]{1,200}$/)" },
+            "t": { ".validate": "newData.isNumber()" },
+            "d": { "$target": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" } },
+            "k": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+            "f": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3600000" },
+            "$other": { ".validate": false }
+          }
+        },
+        "race": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['n', 'phase', 'startAt', 'settings'])",
+          "n": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
+          "phase": { ".validate": "newData.val() === 'lobby' || newData.val() === 'grid' || newData.val() === 'results'" },
+          "startAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "endAt": { ".validate": "newData.isNumber()" },
+          "grid": {
+            "$id": { ".validate": "($id.matches(/^[A-Z0-9]{12}$/) || $id.matches(/^b_[0-9]{1,2}$/)) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 11" }
+          },
+          "settings": {
+            ".validate": "newData.hasChildren(['seed', 'length', 'theme', 'gen', 'laps', 'bots', 'skill', 'crash', 'armour', 'weapons'])",
+            "seed": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+            "length": { ".validate": "newData.val() === 's' || newData.val() === 'm' || newData.val() === 'l'" },
+            "theme": { ".validate": "newData.val() === 'docks' || newData.val() === 'quarry' || newData.val() === 'foundry'" },
+            "gen": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000" },
+            "laps": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9" },
+            "bots": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 11" },
+            "skill": { ".validate": "newData.val() === 'mixed' || newData.val() === 'easy' || newData.val() === 'normal' || newData.val() === 'hard' || newData.val() === 'expert'" },
+            "crash": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2" },
+            "armour": { ".validate": "newData.isNumber() && newData.val() >= 50 && newData.val() <= 300" },
+            "weapons": { ".validate": "newData.isBoolean()" },
+            "elim": { ".validate": "newData.isBoolean()" },
+            "$other": { ".validate": false }
+          },
+          "$other": { ".validate": false }
+        },
+        "results": {
+          "$n": {
+            "$id": {
+              ".write": "!data.exists()",
+              ".validate": "($id.matches(/^[A-Z0-9]{12}$/) || $id.matches(/^b_[0-9]{1,2}$/)) && newData.hasChildren(['name', 'k'])",
+              "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+              "ms": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3600000" },
+              "best": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3600000 && (!newData.parent().child('ms').exists() || newData.val() <= newData.parent().child('ms').val())" },
+              "k": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+              "dnf": { ".validate": "newData.isBoolean()" },
+              "bot": { ".validate": "newData.isBoolean()" },
+              "$other": { ".validate": false }
+            }
+          }
+        },
+        "hazards": {
+          "$hid": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['k', 'x', 'y', 'z', 'by', 'until']) || !newData.exists()",
+            "k": { ".validate": "newData.val() === 'oil' || newData.val() === 'smoke' || newData.val() === 'napalm' || newData.val() === 'mines'" },
+            "x": { ".validate": "newData.isNumber() && newData.val() >= -5000 && newData.val() <= 5000" },
+            "y": { ".validate": "newData.isNumber() && newData.val() >= -5000 && newData.val() <= 5000" },
+            "z": { ".validate": "newData.isNumber() && newData.val() >= -5000 && newData.val() <= 5000" },
+            "by": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "until": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "events": {
+          "$eid": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['k', 'from', 't']) || !newData.exists()",
+            "k": { ".validate": "newData.val() === 'wreck' || newData.val() === 'missile' || newData.val() === 'boom'" },
+            "from": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "t": { ".validate": "newData.isNumber()" },
+            "v": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "by": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "w": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "x": { ".validate": "newData.isNumber()" },
+            "y": { ".validate": "newData.isNumber()" },
+            "z": { ".validate": "newData.isNumber()" },
+            "vx": { ".validate": "newData.isNumber()" },
+            "vy": { ".validate": "newData.isNumber()" },
+            "vz": { ".validate": "newData.isNumber()" },
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+            "dmg": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 60" },
+            "push": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "leaderboard": {
+      ".read": true,
+      ".indexOn": ["score"],
+      "$pid": {
+        ".write": "$pid.matches(/^[pd]_[A-Za-z0-9_-]{6,40}$/)",
+        ".validate": "newData.hasChildren(['name', 'races', 'podiums', 'wins', 'kills', 'score'])",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+        "races": { ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
+        "podiums": { ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 1" },
+        "wins": { ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() - (data.exists() ? data.val() : 0) <= newData.parent().child('podiums').val() - (data.parent().child('podiums').exists() ? data.parent().child('podiums').val() : 0)" },
+        "kills": { ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 50" },
+        "score": { ".validate": "newData.isNumber() && newData.val() === newData.parent().child('races').val() * 5 + newData.parent().child('podiums').val() * 20 + newData.parent().child('wins').val() * 50 + newData.parent().child('kills').val() * 10" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
