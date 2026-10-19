@@ -5,7 +5,7 @@ import { curve, radialDeadzone, trigger } from './stick';
  * The first connected gamepad with the standard mapping, polled once per frame:
  *
  *   left stick: steer      RT / LT: accelerate / brake      A: handbrake     B or L3: nitro
- *   right stick: aim       RB: fire                         LB: missile      X: rear defence
+ *   RB: fire               LB: missile                      X: rear defence  (the turret aims itself)
  *   Y: look back           Back: respawn                    Start: pause
  *
  * Inside Discord's iframe the Gamepad API may be blocked by the permissions policy; reading it
@@ -13,14 +13,9 @@ import { curve, radialDeadzone, trigger } from './stick';
  */
 
 const B = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, L3: 10, R3: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 } as const;
-/** Right-stick aim speed at full tilt (rad/s) */
-const AIM_RATE = 3.2;
 
 export class GamepadInput {
   readonly input: CarInput = neutralInput();
-  /** Camera aim this frame (rad) */
-  aimX = 0;
-  aimY = 0;
   /** Start pressed this frame */
   pause = false;
   connected = false;
@@ -28,10 +23,9 @@ export class GamepadInput {
   private prev = new Set<number>();
   private pad: Gamepad | null = null;
 
-  read(dt: number, deadzone: number): CarInput {
+  read(deadzone: number): CarInput {
     const i = this.input;
     Object.assign(i, neutralInput());
-    this.aimX = this.aimY = 0;
     this.pause = false;
     const pad = this.poll();
     this.pad = pad;
@@ -55,9 +49,6 @@ export class GamepadInput {
     i.lookBack = pressed(B.Y);
     i.respawn = edge(B.BACK);
     this.pause = edge(B.START);
-    const [ax, ay] = radialDeadzone(pad.axes[2] ?? 0, pad.axes[3] ?? 0, deadzone);
-    this.aimX = curve(ax, 1.8) * AIM_RATE * dt;
-    this.aimY = curve(ay, 1.8) * AIM_RATE * dt;
     this.prev = new Set(pad.buttons.map((b, k) => (b.pressed ? k : -1)).filter((k) => k >= 0));
     return i;
   }

@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore } 
 import type { Game } from '../game/game';
 import { formatDelta, formatTime } from '../game/race/clock';
 import type { Banner, FeedLine, HudState, RaceResults, StandingRow } from '../game/hudStore';
-import { TOUCH } from '../game/device';
 import { useSettings } from './useSettings';
 
 interface Props {
@@ -31,8 +30,9 @@ export function Hud({ game, onRestart, onExit, inRoom = false }: Props) {
   const gapAhead = useRef<HTMLSpanElement>(null);
   const gapBehind = useRef<HTMLSpanElement>(null);
   const lock = useRef<HTMLDivElement>(null);
+  const aim = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    game.bindReadouts({ speed: speed.current, gear: gear.current, fps: fps.current, time: time.current, gapAhead: gapAhead.current, gapBehind: gapBehind.current, lock: lock.current });
+    game.bindReadouts({ speed: speed.current, gear: gear.current, fps: fps.current, time: time.current, gapAhead: gapAhead.current, gapBehind: gapBehind.current, lock: lock.current, aim: aim.current });
     return () => game.bindReadouts({});
   }, [game]);
   const minimapHost = useCallback((el: HTMLDivElement | null) => game.mountMinimap(el), [game]);
@@ -74,7 +74,10 @@ export function Hud({ game, onRestart, onExit, inRoom = false }: Props) {
         <div id="hud-gear"><span ref={gear}>1</span></div>
         <NitroBar value={hud.nitro} max={hud.nitroTank} active={hud.nitroActive} />
       </div>
-      <Crosshair hits={hud.hits} heat={hud.heat} locked={hud.gunLocked} hidden={showResults} />
+      {/* Moved by the game to where the turret is pointing */}
+      <div id="aim-point" ref={aim}>
+        <Crosshair hits={hud.hits} heat={hud.heat} locked={hud.gunLocked} empty={hud.ammo <= 0} hidden={showResults} />
+      </div>
       {/* Moved by the game over the car auto aim is locked onto */}
       <div id="lock-on" ref={lock} hidden aria-hidden="true">
         <svg viewBox="0 0 48 48" width="48" height="48"><path d="M2 14V2h12M34 2h12v12M46 34v12H34M14 46H2V34" /></svg>
@@ -90,7 +93,6 @@ export function Hud({ game, onRestart, onExit, inRoom = false }: Props) {
         </div>
       )}
       {hud.toast && <div id="toast" role="status">{hud.toast}</div>}
-      {!TOUCH && !hud.locked && hud.phase === 'ready' && !showResults && <div id="aim-hint">Click to aim with the mouse · Esc to pause</div>}
       {showResults && <Results results={hud.results} rows={hud.standings} over={hud.over} racing={racing} inRoom={inRoom} onRestart={onRestart} onExit={onExit} />}
     </div>
   );
@@ -128,10 +130,10 @@ const ArmourBar = memo(function ArmourBar({ armour, max }: { armour: number; max
 const Weapons = memo(function Weapons({ hud }: { hud: HudState }) {
   return (
     <div id="hud-weapons" className={hud.weaponsHot ? '' : 'cold'}>
-      <div className={`slot gun ${hud.armed > 0 ? 'armed' : ''} ${hud.gunLocked ? 'locked' : ''}`}>
-        <span className="icon">⁞⁞</span>
+      <div className={`slot gun ${hud.armed > 0 ? 'armed' : ''} ${hud.gunLocked ? 'locked' : ''} ${hud.ammo > 0 ? '' : 'empty'}`}>
+        <span className="icon">⁞⁞</span>{hud.ammo > 0 && <b>{hud.ammo}</b>}
         <div className="heat"><div style={{ width: `${hud.heat * 100}%` }} /></div>
-        <small>{hud.gunLocked ? 'OVERHEAT' : hud.armed > 0 ? `ARMED ${hud.armed}s` : 'GUNS'}</small>
+        <small>{hud.ammo <= 0 ? 'NO GUN · FIND A PAD' : hud.gunLocked ? 'OVERHEAT' : hud.armed > 0 ? `ARMED ${hud.armed}s` : 'ROUNDS'}</small>
       </div>
       <div className={`slot missiles ${hud.missiles ? '' : 'empty'}`}>
         <span className="icon">➶</span><b>{hud.missiles}</b><small>MISSILES</small>
@@ -144,7 +146,7 @@ const Weapons = memo(function Weapons({ hud }: { hud: HudState }) {
 });
 
 /** The crosshair, flashing on each hit; its ring shows the guns' heat */
-const Crosshair = memo(function Crosshair({ hits, heat, locked, hidden }: { hits: number; heat: number; locked: boolean; hidden: boolean }) {
+const Crosshair = memo(function Crosshair({ hits, heat, locked, empty, hidden }: { hits: number; heat: number; locked: boolean; empty: boolean; hidden: boolean }) {
   const [flash, setFlash] = useState(0);
   useEffect(() => {
     if (!hits) return;
@@ -154,7 +156,7 @@ const Crosshair = memo(function Crosshair({ hits, heat, locked, hidden }: { hits
   }, [hits]);
   if (hidden) return null;
   return (
-    <div id="crosshair" className={`${flash ? 'hit' : ''} ${locked ? 'locked' : ''}`} aria-hidden="true">
+    <div id="crosshair" className={`${flash ? 'hit' : ''} ${locked ? 'locked' : ''} ${empty ? 'empty' : ''}`} aria-hidden="true">
       <svg viewBox="0 0 64 64" width="64" height="64">
         <circle cx="32" cy="32" r="20" className="ring" />
         <circle cx="32" cy="32" r="20" className="heat" strokeDasharray={`${heat * 125.6} 125.6`} transform="rotate(-90 32 32)" />

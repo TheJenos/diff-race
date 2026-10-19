@@ -74,7 +74,7 @@ export class Minimap {
     for (const p of t.pads) {
       const i = Math.floor(p.s / t.ds) % t.n;
       const [x, y] = this.toPx(t.pos[i * 3] as number, t.pos[i * 3 + 2] as number);
-      g.fillStyle = p.kind === 'sword' ? '#ff4a2a' : p.kind === 'shield' ? '#3a8bff' : '#9cff3a';
+      g.fillStyle = p.kind === 'gun' ? '#ffb020' : p.kind === 'sword' ? '#ff4a2a' : p.kind === 'shield' ? '#3a8bff' : '#9cff3a';
       g.fillRect(x - 1.5, y - 1.5, 3, 3);
     }
     for (const d of dots) {

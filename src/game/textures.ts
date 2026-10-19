@@ -7,11 +7,11 @@ import { canvas2d } from './canvas';
  * drawn in light neutral tones so each theme's palette tints them (material.color).
  */
 
-export type TextureName = 'asphalt' | 'gravel' | 'ground' | 'concrete' | 'stripes' | 'kerb' | 'checker' | 'metal' | 'padSword' | 'padShield' | 'padSkull' | 'spikes';
+export type TextureName = 'asphalt' | 'gravel' | 'ground' | 'concrete' | 'stripes' | 'kerb' | 'checker' | 'metal' | 'spikes';
 
 /** Metres covered by one repeat of each, along and across */
 export const TILE: Record<TextureName, number> = {
-  asphalt: 8, gravel: 4, ground: 16, concrete: 3, stripes: 2, kerb: 2, checker: 2, metal: 2, padSword: 4, padShield: 4, padSkull: 4, spikes: 1,
+  asphalt: 8, gravel: 4, ground: 16, concrete: 3, stripes: 2, kerb: 2, checker: 2, metal: 2, spikes: 1,
 };
 
 // ---------------------------------------------------------------- noise
@@ -182,79 +182,6 @@ const PAINTERS: Partial<Record<TextureName, { size: number; paint: Painter }>> =
       return grey(150 + brushed * 30 - (rust < 0.35 ? 45 : 0) + rivet);
     }),
   },
-};
-
-/** A pad decal: a glowing ring with an icon, on transparent */
-function pad(icon: (g: CanvasRenderingContext2D, c: number) => void): Painter {
-  return (g, size) => {
-    const c = size / 2;
-    g.clearRect(0, 0, size, size);
-    g.strokeStyle = '#ffffff';
-    g.lineWidth = size * 0.06;
-    g.beginPath();
-    g.arc(c, c, size * 0.42, 0, Math.PI * 2);
-    g.stroke();
-    g.fillStyle = 'rgba(255,255,255,0.18)';
-    g.beginPath();
-    g.arc(c, c, size * 0.39, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = '#ffffff';
-    icon(g, c);
-  };
-}
-
-PAINTERS.padSword = {
-  size: 256,
-  paint: pad((g, c) => {
-    // A blade pointing along the road (up the texture), with a cross-guard.
-    g.beginPath();
-    g.moveTo(c, c - 80);
-    g.lineTo(c + 16, c - 50);
-    g.lineTo(c + 12, c + 30);
-    g.lineTo(c - 12, c + 30);
-    g.lineTo(c - 16, c - 50);
-    g.closePath();
-    g.fill();
-    g.fillRect(c - 44, c + 30, 88, 14);
-    g.fillRect(c - 8, c + 44, 16, 34);
-  }),
-};
-PAINTERS.padShield = {
-  size: 256,
-  paint: pad((g, c) => {
-    g.beginPath();
-    g.moveTo(c, c - 72);
-    g.lineTo(c + 58, c - 50);
-    g.quadraticCurveTo(c + 56, c + 40, c, c + 78);
-    g.quadraticCurveTo(c - 56, c + 40, c - 58, c - 50);
-    g.closePath();
-    g.fill();
-  }),
-};
-
-PAINTERS.padSkull = {
-  size: 256,
-  paint: pad((g, c) => {
-    // A skull: dome, jaw, two eye holes.
-    g.beginPath();
-    g.arc(c, c - 14, 54, Math.PI, 0);
-    g.lineTo(c + 54, c + 18);
-    g.lineTo(c + 30, c + 34);
-    g.lineTo(c + 30, c + 62);
-    g.lineTo(c - 30, c + 62);
-    g.lineTo(c - 30, c + 34);
-    g.lineTo(c - 54, c + 18);
-    g.closePath();
-    g.fill();
-    g.globalCompositeOperation = 'destination-out';
-    for (const x of [-22, 22]) {
-      g.beginPath();
-      g.arc(c + x, c - 2, 15, 0, Math.PI * 2);
-      g.fill();
-    }
-    g.fillRect(c - 4, c + 22, 8, 16);
-    g.globalCompositeOperation = 'source-over';
-  }),
 };
 
 const cache = new Map<TextureName, THREE.CanvasTexture>();

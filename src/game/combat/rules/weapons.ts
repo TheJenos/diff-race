@@ -18,6 +18,9 @@ export const GUN = {
   heatPerShot: 1 / 30,
   cooling: 0.45,
   lockout: 1.5,
+  /** No gun until one's picked up: a gun pad loads this many rounds (15 s of fire), up to `max`; a wreck loses them */
+  perPad: 150,
+  max: 300,
 };
 
 export const ARMED = {
@@ -37,6 +40,12 @@ export const MISSILE = {
   /** A sword pad gives this many, up to `max` */
   perPad: 2,
   max: 4,
+  /**
+   * Heat seeking (rules/homing.ts): at launch it locks onto the car nearest the line it's fired
+   * along, within `cone` (rad) and `range` (m) and in sight; then it turns toward it at up to
+   * `turn` rad/s, leading it by up to `lead` s, and bursts within `fuse` (m) of it.
+   */
+  seek: { cone: 0.6, range: 140, turn: 2.2, lead: 0.5, fuse: 2.4 },
 };
 
 export type DefenceKind = 'oil' | 'smoke' | 'napalm' | 'mines' | 'flame';

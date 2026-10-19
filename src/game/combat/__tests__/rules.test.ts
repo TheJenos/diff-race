@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { arm, newGun, roundDamage, stepGun } from '../rules/heat';
+import { arm, loadGun, newGun, roundDamage, stepGun } from '../rules/heat';
 import { GUN } from '../rules/weapons';
 import { rayBox, type Box } from '../rules/hitTest';
 import { aimError, anglesOf, barrel, newTurret, slew } from '../../car/turret';
@@ -7,8 +7,32 @@ import { aimError, anglesOf, barrel, newTurret, slew } from '../../car/turret';
 const box = (over: Partial<Box> = {}): Box => ({ cx: 0, cy: 0, cz: -10, qx: 0, qy: 0, qz: 0, qw: 1, hx: 1, hy: 0.5, hz: 2, ...over });
 
 describe('machine gun', () => {
+  it('has no rounds until a gun pad loads some, and stops when they run out', () => {
+    const g = newGun();
+    let shots = 0;
+    for (let i = 0; i < 120; i++) shots += stepGun(g, true, 1 / 120);
+    expect(shots).toBe(0);
+    expect(g.heat).toBe(0);
+    loadGun(g);
+    expect(g.ammo).toBe(GUN.perPad);
+    arm(g);
+    // Armed (no overheating): it fires until the rounds are gone, and not one more.
+    for (let i = 0; i < 120 * 30; i++) shots += stepGun(g, true, 1 / 120);
+    expect(shots).toBe(GUN.perPad);
+    expect(g.ammo).toBe(0);
+  });
+
+  it('carries only so many rounds', () => {
+    const g = newGun();
+    loadGun(g);
+    loadGun(g);
+    loadGun(g);
+    expect(g.ammo).toBe(GUN.max);
+  });
+
   it('fires at its rate, overheats after about 3 s and locks out', () => {
     const g = newGun();
+    loadGun(g);
     let shots = 0;
     for (let i = 0; i < 120 * 2.9; i++) shots += stepGun(g, true, 1 / 120);
     expect(shots).toBeGreaterThanOrEqual(28);
@@ -22,6 +46,7 @@ describe('machine gun', () => {
 
   it('does not overheat while armed, and hits harder', () => {
     const g = newGun();
+    loadGun(g);
     arm(g);
     for (let i = 0; i < 120 * 6; i++) stepGun(g, true, 1 / 120);
     expect(g.locked).toBe(0);

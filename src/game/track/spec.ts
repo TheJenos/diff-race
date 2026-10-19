@@ -13,13 +13,14 @@ export const TRACK_LENGTHS: readonly TrackLength[] = ['s', 'm', 'l'];
  * Bumped whenever the generator would build a different track from the same spec. Clients with a
  * different version refuse to play a room's track (they'd race on another one) and ask for a refresh.
  */
-export const GENERATOR_VERSION = 3;
+export const GENERATOR_VERSION = 4;
 /*
  * History:
  *   1 — first
  *   2 — skull trap pads
  *   3 — more bends: notches, chicanes, sometimes two hairpins, bigger swings in and out, a long
  *       start straight; tight spots relaxed faster, in rounds
+ *   4 — gun pads: a row after the start, a few more round the lap
  */
 
 export interface TrackSpec {

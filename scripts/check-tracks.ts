@@ -89,7 +89,7 @@ function dump(t: TrackData, file: string): void {
   for (let u = -12; u <= 12; u += 0.5) { const p = at(0, u); put(p.x, p.z, [255, 255, 255], 2); }
   for (const pd of t.pads) {
     const p = at(Math.floor(pd.s / t.ds) % t.n, pd.u);
-    put(p.x, p.z, pd.kind === 'sword' ? [255, 60, 40] : pd.kind === 'shield' ? [60, 120, 255] : [150, 255, 60], 4);
+    put(p.x, p.z, pd.kind === 'gun' ? [255, 176, 32] : pd.kind === 'sword' ? [255, 60, 40] : pd.kind === 'shield' ? [60, 120, 255] : [150, 255, 60], 4);
   }
   for (const r of t.ramps) {
     for (let s = r.s; s < r.s + r.len; s += 1) {

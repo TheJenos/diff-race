@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ACTIONS, FOV_MAX, FOV_MIN, HUD_SCALE_MAX, HUD_SCALE_MIN, keyLabel, MOTION_OPTIONS, QUALITIES, RESERVED_KEYS,
-  SENSITIVITY_MAX, SENSITIVITY_MIN, settings, type Action, type MotionPref, type Quality,
+  settings, type Action, type MotionPref, type Quality,
 } from '../game/settings';
 import { useDialogFocus } from './useDialogFocus';
 import { MenuTabs, type MenuTab } from './MenuShell';
@@ -64,15 +64,7 @@ export function SettingsPanel({ onClose, profile }: Props) {
                   <div className="bindings">
                     {ACTIONS.map(({ action, label }) => <KeybindRow key={action} action={action} label={label} code={s.bindings[action]} />)}
                   </div>
-                  <p className="muted hint">Arrow keys always drive too. Left mouse fires, right mouse launches a missile.</p>
-                </section>
-                <section>
-                  <h4>Mouse and aiming</h4>
-                  <Slider label="Aim sensitivity" min={SENSITIVITY_MIN} max={SENSITIVITY_MAX} step={0.05} value={s.sensitivity}
-                    format={(v) => `${v.toFixed(2)}×`} onChange={(v) => settings.update({ sensitivity: v })} />
-                  <Toggle label="Invert vertical aim" value={s.invertY} onChange={(v) => settings.update({ invertY: v })} />
-                  <Toggle label="Auto aim: the guns lock onto the car you're looking at" value={s.autoAim} onChange={(v) => settings.update({ autoAim: v })} />
-                  <Toggle label="Aim assist (gamepad and touch)" value={s.aimAssist} onChange={(v) => settings.update({ aimAssist: v })} />
+                  <p className="muted hint">Arrow keys always drive too. Left mouse fires, right mouse launches a missile. The turret aims itself: it locks onto the car in front (look back to shoot behind).</p>
                 </section>
                 <section>
                   <h4>Gamepad</h4>
@@ -115,7 +107,6 @@ export function SettingsPanel({ onClose, profile }: Props) {
                   <h4>View</h4>
                   <Slider label="Field of view" min={FOV_MIN} max={FOV_MAX} step={1} value={s.fov} format={(v) => `${v}°`}
                     onChange={(v) => settings.update({ fov: v })} />
-                  <Toggle label="Camera swings back behind the car" value={s.recentre} onChange={(v) => settings.update({ recentre: v })} />
                   <Toggle label="Screen shake" value={s.screenShake} onChange={(v) => settings.update({ screenShake: v })} />
                   <Toggle label="Replay my wrecks" value={s.replays} onChange={(v) => settings.update({ replays: v })} />
                 </section>

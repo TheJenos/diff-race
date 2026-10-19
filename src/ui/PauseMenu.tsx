@@ -124,7 +124,7 @@ function ControlsView() {
     return (
       <div className="pause-touch">
         <p className="touch-help">
-          Drag on the left half to steer, on the right half to aim the turret. FIRE holds the guns down, MSL launches a missile,
+          Drag on the left half to steer. The turret aims itself: FIRE holds the guns down, MSL launches a heat-seeking missile,
           DROP lets the rear defence go; SLIDE is the handbrake and NOS the nitro. The car accelerates by itself (a setting).
         </p>
       </div>
@@ -134,12 +134,11 @@ function ControlsView() {
     <div className="panel-controls">
       <ul className="keys">
         {ACTIONS.map(({ action, label }) => <li key={action}><kbd>{keyLabel(s.bindings[action])}</kbd>{label}</li>)}
-        <li><kbd>Mouse</kbd>Aim the turret (click to capture it)</li>
         <li><kbd>Left mouse</kbd>Machine gun</li>
         <li><kbd>Right mouse</kbd>Missile</li>
         <li><kbd>Esc</kbd>This menu</li>
       </ul>
-      <p className="muted hint">Keys can be changed in Settings → Controls. A gamepad works too: triggers drive, the right stick aims.</p>
+      <p className="muted hint">The turret aims itself at the car in front. Keys can be changed in Settings → Controls. A gamepad works too: triggers drive, RB fires.</p>
     </div>
   );
 }

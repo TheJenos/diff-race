@@ -47,7 +47,7 @@ test('machine-gun fire wrecks a car, credits the kill and shows YOU DIFFED', asy
   await expect.poll(() => p.game((_t, g) => g.session.combat.hot), { timeout: 30_000 }).toBe(true);
   // Soften it up, then finish it with the guns.
   await p.game((t, _g, id) => t.damage(140, id), target.id);
-  await p.game((t) => t.give('armed'));
+  await p.game((t) => { t.give('gun'); t.give('armed'); });
   await p.hold({ fire: true });
   await expect.poll(async () => (await racers(p)).find((r) => r.id === target.id)!.wrecked, { timeout: 60_000 }).toBe(true);
   expect((await p.state()).kills).toBe(1);
@@ -69,7 +69,7 @@ test('auto aim locks onto the car ahead, and holding fire wrecks it', async ({ b
   await expect(p.page.locator('#lock-on')).toBeVisible();
   await expect.poll(() => p.game((_t, g) => g.session.combat.hot), { timeout: 30_000 }).toBe(true);
   await p.game((t, _g, id) => t.damage(140, id), target.id);
-  await p.game((t) => t.give('armed'));
+  await p.game((t) => { t.give('gun'); t.give('armed'); });
   await p.hold({ fire: true });
   await expect.poll(async () => (await racers(p)).find((r) => r.id === target.id)!.wrecked, { timeout: 60_000 }).toBe(true);
   await expect(p.page.locator('#diffed')).toContainText('YOU DIFFED');

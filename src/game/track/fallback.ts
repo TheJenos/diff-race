@@ -74,6 +74,11 @@ export function stadiumTrack(spec: TrackSpec, theme: ThemeId = spec.theme ?? 'do
     grid: gridSlots(),
     checkpoints: checkpointsFor(total),
     kerbs: kerbRuns(arcSamples, n),
+    // Guns, as every track has them: a row across the road just after the line, one on the back straight.
+    pads: [
+      ...[-5, 0, 5].map((u) => ({ s: Math.round((1 - START_AT) * ls * 0.6), u, kind: 'gun' as const })),
+      { s: Math.round((1 - START_AT) * ls + arc + ls / 2), u: 0, kind: 'gun' as const },
+    ],
     fallback: true,
   });
 }

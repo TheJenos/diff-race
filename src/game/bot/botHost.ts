@@ -88,6 +88,8 @@ export class BotHost {
     const offset = laneOffset({
       s: r.loc.s, u: r.loc.u, line, speed: body.speed, armour: r.damage.armour,
       wantsSword: r.missiles < 2, wantsShield: !r.defence || r.damage.armour < r.damage.max * 0.6,
+      // Running low on rounds: a gun pad; with none at all, it's worth leaving the line for.
+      wantsGun: r.gun.ammo < 80, needsGun: r.gun.ammo === 0,
       // A trap is worth springing when someone's not far ahead to run into it.
       wantsSkull: rivals.some((x) => x.dD > 40 && x.dD < 160),
     }, rivals, this.track.pads, this.track.lapLength, b.skill, b.roll);

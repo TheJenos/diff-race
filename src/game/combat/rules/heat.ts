@@ -1,8 +1,9 @@
 import { ARMED, GUN } from './weapons';
 
 /*
- * The machine gun: rounds fired at its rate while the trigger is held, heat building with each,
- * and a lockout when it overheats. A sword pad's armed spell turns the heat off. Pure.
+ * The machine gun: rounds fired at its rate while the trigger is held (while there are rounds:
+ * a car has none until it drives over a gun pad), heat building with each, and a lockout when it
+ * overheats. A sword pad's armed spell turns the heat off. Pure.
  */
 
 export interface GunState {
@@ -14,9 +15,16 @@ export interface GunState {
   armed: number;
   /** Fraction of the next round already "loaded" (keeps the rate exact at any frame rate) */
   charge: number;
+  /** Rounds left: none until a gun pad loads some */
+  ammo: number;
 }
 
-export const newGun = (): GunState => ({ heat: 0, locked: 0, armed: 0, charge: 0 });
+export const newGun = (): GunState => ({ heat: 0, locked: 0, armed: 0, charge: 0, ammo: 0 });
+
+/** A gun pad: rounds loaded, up to the most a car can carry */
+export function loadGun(g: GunState, rounds: number = GUN.perPad): void {
+  g.ammo = Math.min(GUN.max, g.ammo + rounds);
+}
 
 /** Advance `dt` seconds with the trigger held or not; returns how many rounds fired */
 export function stepGun(g: GunState, firing: boolean, dt: number): number {
@@ -27,14 +35,15 @@ export function stepGun(g: GunState, firing: boolean, dt: number): number {
     g.charge = 0;
     return 0;
   }
-  if (!firing) {
+  if (!firing || g.ammo <= 0) {
     g.heat = Math.max(0, g.heat - GUN.cooling * dt);
     g.charge = 0;
     return 0;
   }
   g.charge += GUN.rate * dt;
-  const shots = Math.floor(g.charge);
-  g.charge -= shots;
+  const shots = Math.min(g.ammo, Math.floor(g.charge));
+  g.charge -= Math.floor(g.charge);
+  g.ammo -= shots;
   if (g.armed <= 0) {
     g.heat += shots * GUN.heatPerShot;
     if (g.heat >= 1) {

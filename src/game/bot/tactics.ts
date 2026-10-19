@@ -16,16 +16,28 @@ export interface Rival {
 
 /** Lateral offset (m from the racing line) to steer for, given the cars around and the pads coming up */
 export function laneOffset(
-  self: { s: number; u: number; line: number; speed: number; armour: number; wantsSword: boolean; wantsShield: boolean; wantsSkull?: boolean },
+  self: {
+    s: number; u: number; line: number; speed: number; armour: number;
+    wantsSword: boolean; wantsShield: boolean; wantsSkull?: boolean; wantsGun?: boolean;
+    /** No rounds at all: a gun pad beats everything, greedy or not */
+    needsGun?: boolean;
+  },
   rivals: readonly Rival[], pads: readonly TrackPad[], lapLength: number, skill: SkillParams, roll: number,
 ): number {
-  // A pad within reach that it wants: go for it.
+  // A pad within reach that it wants: go for it. With no gun, the next gun pad whatever the greed.
+  if (self.needsGun) {
+    for (const p of pads) {
+      let ahead = p.s - self.s;
+      if (ahead < 0) ahead += lapLength;
+      if (p.kind === 'gun' && ahead >= 8 && ahead <= 80) return p.u - self.line;
+    }
+  }
   if (roll < skill.padGreed) {
     for (const p of pads) {
       let ahead = p.s - self.s;
       if (ahead < 0) ahead += lapLength;
       if (ahead < 12 || ahead > 70) continue;
-      if ((p.kind === 'sword' && self.wantsSword) || (p.kind === 'shield' && self.wantsShield) || (p.kind === 'skull' && self.wantsSkull)) return p.u - self.line;
+      if ((p.kind === 'gun' && self.wantsGun) || (p.kind === 'sword' && self.wantsSword) || (p.kind === 'shield' && self.wantsShield) || (p.kind === 'skull' && self.wantsSkull)) return p.u - self.line;
     }
   }
   let offset = 0;

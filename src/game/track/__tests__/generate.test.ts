@@ -32,6 +32,10 @@ describe('track generator', () => {
         expect(t.grid).toHaveLength(12);
         expect(t.pads.some((p) => p.kind === 'sword')).toBe(true);
         expect(t.pads.some((p) => p.kind === 'shield')).toBe(true);
+        // Guns: a row of three across the road soon after the start, and more round the lap.
+        const guns = t.pads.filter((p) => p.kind === 'gun');
+        expect(guns.filter((p) => p.s >= 140 && p.s <= 200)).toHaveLength(3);
+        expect(guns.length).toBeGreaterThanOrEqual(5);
         expect(t.scenery.length).toBeGreaterThan(20);
         // The start line is level and straight.
         expect(Math.abs(t.curvature[0]!)).toBeLessThan(0.005);

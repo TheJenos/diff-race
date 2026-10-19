@@ -2,7 +2,7 @@
 
 export type Action =
   | 'throttle' | 'brake' | 'left' | 'right' | 'handbrake' | 'nitro'
-  | 'missile' | 'defence' | 'lookBack' | 'respawn' | 'scoreboard';
+  | 'fire' | 'missile' | 'defence' | 'lookBack' | 'respawn' | 'scoreboard';
 
 export const ACTIONS: { action: Action; label: string }[] = [
   { action: 'throttle', label: 'Accelerate' },
@@ -11,6 +11,7 @@ export const ACTIONS: { action: Action; label: string }[] = [
   { action: 'right', label: 'Steer right' },
   { action: 'handbrake', label: 'Handbrake' },
   { action: 'nitro', label: 'Nitro' },
+  { action: 'fire', label: 'Machine gun (also left mouse)' },
   { action: 'missile', label: 'Fire missile (also right mouse)' },
   { action: 'defence', label: 'Drop rear defence' },
   { action: 'lookBack', label: 'Look back' },
@@ -25,17 +26,12 @@ export type MotionPref = 'system' | 'reduce' | 'full';
 export type Units = 'kmh' | 'mph';
 
 export interface Settings {
-  /** Multiplier on the base mouse speed (turret aim) */
-  sensitivity: number;
-  invertY: boolean;
   /** Field of view at rest, degrees (nitro widens it) */
   fov: number;
   /** Rendering: resolution cap, shadows, scenery density */
   quality: Quality;
   /** Camera shake on hits, rams and landings */
   screenShake: boolean;
-  /** Swing the camera back behind the car after a moment without aiming */
-  recentre: boolean;
   /** Pulsing / zooming HUD animations: follow the OS, or force on/off */
   reduceMotion: MotionPref;
   hudScale: number;
@@ -46,10 +42,6 @@ export interface Settings {
   musicVolume: number;
   /** Gamepad stick deadzone (0..0.4) */
   deadzone: number;
-  /** Turret aim assist on gamepad and touch */
-  aimAssist: boolean;
-  /** The turret locks onto the car the camera faces by itself (combat/rules/autoAim.ts) */
-  autoAim: boolean;
   /** Touch: accelerate on its own unless braking */
   autoAccelerate: boolean;
   /** Gamepad rumble on hits and crashes */
@@ -64,8 +56,6 @@ export interface Settings {
   bindings: Bindings;
 }
 
-export const SENSITIVITY_MIN = 0.1;
-export const SENSITIVITY_MAX = 4;
 export const FOV_MIN = 60;
 export const FOV_MAX = 100;
 export const FOV_DEFAULT = 72;
@@ -89,6 +79,7 @@ export const DEFAULT_BINDINGS: Bindings = {
   right: 'KeyD',
   handbrake: 'Space',
   nitro: 'ShiftLeft',
+  fire: 'KeyE',
   missile: 'KeyQ',
   defence: 'KeyF',
   lookBack: 'KeyC',
@@ -105,15 +96,15 @@ const COARSE = typeof matchMedia === 'function' && matchMedia('(hover: none) and
 const MOTION_QUERY = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 const DEFAULTS: Settings = {
-  sensitivity: 1, invertY: false, fov: FOV_DEFAULT,
+  fov: FOV_DEFAULT,
   // Phones start low; they can turn it up.
-  quality: COARSE ? 'low' : 'high', screenShake: !MOTION_QUERY?.matches, recentre: true,
+  quality: COARSE ? 'low' : 'high', screenShake: !MOTION_QUERY?.matches,
   reduceMotion: 'system', hudScale: 1, showFps: false, units: 'kmh', sfxVolume: 1, musicVolume: 0.7,
-  deadzone: 0.15, aimAssist: true, autoAim: true, autoAccelerate: true, rumble: true, replays: true, outlines: false, kitModels: true,
+  deadzone: 0.15, autoAccelerate: true, rumble: true, replays: true, outlines: false, kitModels: true,
   bindings: DEFAULT_BINDINGS,
 };
 
-/** Esc always releases the mouse, and the arrows always drive, so neither can be bound. */
+/** Esc always pauses, and the arrows always drive, so neither can be bound. */
 export const RESERVED_KEYS = new Set(['Escape', ...Object.keys(ARROW_ACTIONS)]);
 
 const STORAGE_KEY = 'diffrace-settings';
@@ -130,12 +121,9 @@ function load(): Settings {
       Number.isFinite(Number(v)) && v !== null && v !== '' ? Math.min(max, Math.max(min, Number(v))) : fallback;
     const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
     return {
-      sensitivity: num(saved.sensitivity, SENSITIVITY_MIN, SENSITIVITY_MAX, DEFAULTS.sensitivity),
-      invertY: bool(saved.invertY, DEFAULTS.invertY),
       fov: num(saved.fov, FOV_MIN, FOV_MAX, DEFAULTS.fov),
       quality: QUALITIES.some((q) => q.value === saved.quality) ? (saved.quality as Quality) : DEFAULTS.quality,
       screenShake: bool(saved.screenShake, DEFAULTS.screenShake),
-      recentre: bool(saved.recentre, DEFAULTS.recentre),
       reduceMotion: MOTION_OPTIONS.some((o) => o.value === saved.reduceMotion) ? (saved.reduceMotion as MotionPref) : DEFAULTS.reduceMotion,
       hudScale: num(saved.hudScale, HUD_SCALE_MIN, HUD_SCALE_MAX, DEFAULTS.hudScale),
       showFps: bool(saved.showFps, DEFAULTS.showFps),
@@ -143,8 +131,6 @@ function load(): Settings {
       sfxVolume: num(saved.sfxVolume, 0, 1, DEFAULTS.sfxVolume),
       musicVolume: num(saved.musicVolume, 0, 1, DEFAULTS.musicVolume),
       deadzone: num(saved.deadzone, 0.02, 0.4, DEFAULTS.deadzone),
-      aimAssist: bool(saved.aimAssist, DEFAULTS.aimAssist),
-      autoAim: bool(saved.autoAim, DEFAULTS.autoAim),
       autoAccelerate: bool(saved.autoAccelerate, DEFAULTS.autoAccelerate),
       rumble: bool(saved.rumble, DEFAULTS.rumble),
       replays: bool(saved.replays, DEFAULTS.replays),

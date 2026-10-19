@@ -95,7 +95,8 @@ export interface HazardRecord {
 
 export type RoomEvent =
   | { k: 'wreck'; v: string; by: string; w: string }
-  | { k: 'missile'; by: string; x: number; y: number; z: number; vx: number; vy: number; vz: number }
+  /** `v`: the car it's chasing (heat seeking), if it locked onto one */
+  | { k: 'missile'; by: string; x: number; y: number; z: number; vx: number; vy: number; vz: number; v?: string }
   | { k: 'boom'; by: string; x: number; y: number; z: number; r: number; dmg: number; push: number; w: string };
 
 /** As received: with who sent it and when (server ms) */

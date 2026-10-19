@@ -101,6 +101,7 @@ const cases = [
   ['hazard: a shell (not a hazard)', 'rooms/AB2CD/hazards/h2', { k: 'shell', x: 10, y: 0, z: 0, by: PID, until: 9000 }, false],
   ['hazard: off the map', 'rooms/AB2CD/hazards/h3', { k: 'mines', x: 99999, y: 0, z: 0, by: PID, until: 9000 }, false],
   ['event: a wreck', 'rooms/AB2CD/events/e1', { k: 'wreck', v: PID2, by: PID, w: 'ram', from: PID, t: 1 }, true],
+  ['event: a heat-seeking missile', 'rooms/AB2CD/events/e5', { k: 'missile', by: PID, x: 1, y: 2, z: 3, vx: 0, vy: 0, vz: -70, v: PID2, from: PID, t: 1 }, true],
   ['event: a boom', 'rooms/AB2CD/events/e2', { k: 'boom', by: PID, x: 1, y: 2, z: 3, r: 4.5, dmg: 28, push: 7, w: 'missile', from: PID, t: 1 }, true],
   ['event: a nuke', 'rooms/AB2CD/events/e3', { k: 'boom', by: PID, x: 1, y: 2, z: 3, r: 4.5, dmg: 1000, push: 7, w: 'missile', from: PID, t: 1 }, false],
   ['event: unknown kind', 'rooms/AB2CD/events/e4', { k: 'teleport', from: PID, t: 1 }, false],

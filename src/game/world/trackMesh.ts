@@ -95,9 +95,6 @@ export function buildTrackMesh(t: TrackData, shadows: boolean): TrackMesh {
     skirt: material('ground', palette.ground, { side: THREE.DoubleSide }),
     ramp: material('metal', 0x8a8c90, { roughness: 0.55, metalness: 0.6 }),
     paint: new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.8, ...decal }),
-    sword: new THREE.MeshStandardMaterial({ map: texture('padSword'), emissiveMap: texture('padSword'), emissive: 0xff3a20, emissiveIntensity: 1.6, transparent: true, depthWrite: false, ...decal }),
-    shield: new THREE.MeshStandardMaterial({ map: texture('padShield'), emissiveMap: texture('padShield'), emissive: 0x2a7bff, emissiveIntensity: 1.6, transparent: true, depthWrite: false, ...decal }),
-    skull: new THREE.MeshStandardMaterial({ map: texture('padSkull'), emissiveMap: texture('padSkull'), emissive: 0x9cff3a, emissiveIntensity: 1.5, transparent: true, depthWrite: false, ...decal }),
   };
   const geometries: THREE.BufferGeometry[] = [];
   const add = (g: THREE.BufferGeometry, m: THREE.Material, cast: boolean) => {
@@ -169,11 +166,6 @@ export function buildTrackMesh(t: TrackData, shadows: boolean): TrackMesh {
   add(ribbon(t, 0, 2, (i) => [{ u: -hw(i), h: 0.01 }, { u: hw(i), h: 0.01 }], TILE.checker, TILE.checker), mats.checker, false);
 
   if (t.ramps.length) add(mergeGeometries(t.ramps.map((r) => rampGeometry(t, r))), mats.ramp, true);
-  const padGeo = (kind: 'sword' | 'shield' | 'skull') => t.pads.filter((p) => p.kind === kind).map((p) => padGeometry(t, p.s, p.u));
-  for (const kind of ['sword', 'shield', 'skull'] as const) {
-    const g = padGeo(kind);
-    if (g.length) add(mergeGeometries(g), mats[kind], false);
-  }
   add(mergeGeometries(t.grid.map((g) => gridBox(t, g.s, g.u))), mats.paint, false);
 
   // The ground: a big plane under everything.
@@ -223,9 +215,6 @@ function roadQuad(t: TrackData, s0: number, s1: number, u0: number, u1: number, 
 }
 
 /** A weapon pad's glowing decal, 4 m square */
-function padGeometry(t: TrackData, s: number, u: number): THREE.BufferGeometry {
-  return roadQuad(t, s - 2, s + 2, u - 2, u + 2, 0.03);
-}
 
 /** A grid slot's painted box: a U open toward the start line */
 function gridBox(t: TrackData, s: number, u: number): THREE.BufferGeometry {

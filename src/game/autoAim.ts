@@ -5,7 +5,7 @@ import type { RaceSession } from './raceSession';
 import type { Racer } from './racer';
 
 /*
- * The player's auto aim (settings: autoAim): each frame, which car the turret locks onto, picked
+ * The player's auto aim (the turret always aims itself): each frame, which car it locks onto, picked
  * by combat/rules/autoAim.ts from what's in front of the camera and in sight of the guns. Sight
  * is a ray from the guns to the car (barriers and hills block it) and no smoke between, checked
  * every SIGHT_EVERY per car, as the bots see.
@@ -22,7 +22,7 @@ export class AutoAim {
 
   constructor(private readonly physics: PhysicsWorld, private readonly session: RaceSession) {}
 
-  /** The car to aim at this frame, or null to aim where the crosshair points */
+  /** The car to aim at this frame, or null to aim straight ahead */
   update(player: Racer, camera: THREE.Camera, dt: number): Racer | null {
     const now = performance.now() / 1000;
     camera.getWorldDirection(this.fwd);

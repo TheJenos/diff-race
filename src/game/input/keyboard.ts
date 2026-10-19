@@ -47,6 +47,7 @@ export class Keyboard {
     i.steer = (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0);
     i.handbrake = this.down('handbrake');
     i.nitro = this.down('nitro');
+    i.fire = this.down('fire');
     i.lookBack = this.down('lookBack');
     i.missile = this.take('missile');
     i.defence = this.take('defence');

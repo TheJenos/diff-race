@@ -156,8 +156,9 @@ export class RaceSession {
       explosion: (x, _y, z, size) => sfx.explosion(this.volumeAtPoint(x, z) * Math.min(1, size / 4)),
       pickup: (r, kind, defence, spikes) => {
         if (r !== this.player) return;
-        sfx.pickup(kind === 'shield' ? 'shield' : 'sword');
-        if (kind === 'skull') this.hud.announce('TRAP SPRUNG', 'a wall of fire on the road ahead', 'pickup', 1600);
+        sfx.pickup(kind === 'shield' ? 'shield' : kind === 'gun' ? 'gun' : 'sword');
+        if (kind === 'gun') this.hud.announce('GUNS', `${r.gun.ammo} rounds loaded`, 'pickup', 1400);
+        else if (kind === 'skull') this.hud.announce('TRAP SPRUNG', 'a wall of fire on the road ahead', 'pickup', 1600);
         else if (kind === 'sword') this.hud.announce(spikes ? 'RAM SPIKES' : 'ARMED', spikes ? '+2 missiles · spiked ram' : '+2 missiles · guns hot', 'pickup', 1400);
         else this.hud.announce('SHIELDED', `${DEFENCE_NAMES[defence!]} · armour patched`, 'pickup', 1400);
       },
@@ -443,7 +444,7 @@ export class RaceSession {
     const g = p.gun;
     this.hud.update({
       place, count: this.clock.count, lap: laps ? displayLap(p.progress, laps) : p.progress.lapsDone + 1, wrongWay: p.progress.wrongWay,
-      armour: Math.ceil(p.damage.armour), heat: Math.round(g.heat * 20) / 20, gunLocked: g.locked > 0, armed: Math.ceil(g.armed),
+      armour: Math.ceil(p.damage.armour), heat: Math.round(g.heat * 20) / 20, gunLocked: g.locked > 0, ammo: g.ammo, armed: Math.ceil(g.armed),
       missiles: p.missiles, defence: p.defence ? DEFENCE_NAMES[p.defence] : null, weaponsHot: this.combat.hot,
       standings: rows, over: this.over, wreckedBy: p.wrecked ? this.hud.get().wreckedBy : null,
     });

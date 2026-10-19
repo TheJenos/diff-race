@@ -3,7 +3,7 @@ import type { V3 } from '../math/vec3';
 /*
  * The chase camera's motion, without three.js: a point behind and above the car that follows it
  * on springs. It swings round toward where the car is going (velocity), not just where it points,
- * so slides read on screen. Aim offsets (the turret's free look) orbit it round the car. Pure.
+ * so slides read on screen. Pure.
  */
 
 export interface ChaseParams {
@@ -25,7 +25,7 @@ export interface ChaseParams {
 }
 
 export const CHASE: ChaseParams = {
-  distance: 7.2, height: 2.6, lookAhead: 4, lookHeight: 1.1,
+  distance: 5.2, height: 2.0, lookAhead: 3.5, lookHeight: 1.0,
   yawRate: 5, follow: 9, followUp: 12,
   fov: 72, fovSpeed: 6, fovNitro: 9,
 };
@@ -45,10 +45,8 @@ export class ChaseCamera {
   readonly pos: V3 = { x: 0, y: 0, z: 0 };
   readonly look: V3 = { x: 0, y: 0, z: 0 };
   fov = CHASE.fov;
-  /** Camera heading (rad, 0 = looking along -z), and the aim offsets the player adds */
+  /** Camera heading (rad, 0 = looking along -z) */
   private yaw = 0;
-  aimYaw = 0;
-  aimPitch = 0;
   private ready = false;
   private nitroEase = 0;
 
@@ -67,13 +65,12 @@ export class ChaseCamera {
     const carYaw = Math.atan2(-t.fwd.x, -t.fwd.z);
     const velYaw = sp > 3 ? Math.atan2(-t.vel.x, -t.vel.z) : carYaw;
     const forward = Math.cos(velYaw - carYaw) > 0;
-    const target = (forward ? blendAngle(carYaw, velYaw, 0.45) : carYaw) + (t.lookBack ? Math.PI : 0) + this.aimYaw;
+    const target = (forward ? blendAngle(carYaw, velYaw, 0.45) : carYaw) + (t.lookBack ? Math.PI : 0);
     if (!this.ready) this.yaw = target;
     else this.yaw += wrapAngle(target - this.yaw) * (1 - Math.exp(-p.yawRate * dt));
 
-    const pitch = this.aimPitch;
-    const back = p.distance * Math.cos(pitch);
-    const lift = p.height + p.distance * Math.sin(pitch);
+    const back = p.distance;
+    const lift = p.height;
     const dx = -Math.sin(this.yaw);
     const dz = -Math.cos(this.yaw);
     const wantX = t.pos.x - dx * back;

@@ -59,7 +59,7 @@ test("a player's guns hurt another player's car, on that player's own client", a
   await alice.game((t) => t.teleport(t.state().s, 0));
   const s = await alice.game((t) => t.state().s);
   await bob.game((t, _g, at: number) => t.teleport(at + 20, 0), s);
-  await alice.game((t, _g, id: string) => { t.aimAt(id); t.give('armed'); }, bobId);
+  await alice.game((t, _g, id: string) => { t.aimAt(id); t.give('gun'); t.give('armed'); }, bobId);
   await alice.hold({ fire: true });
   await expect.poll(async () => (await bob.state()).armour, { timeout: 60_000 }).toBeLessThan(140);
   await alice.close();

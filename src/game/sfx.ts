@@ -169,8 +169,8 @@ export function explosion(volume: number): void {
   setTimeout(() => thud(volume * 0.6), 60);
 }
 
-export function pickup(kind: 'sword' | 'shield'): void {
-  const base = kind === 'sword' ? 523 : 392;
+export function pickup(kind: 'gun' | 'sword' | 'shield'): void {
+  const base = kind === 'gun' ? 659 : kind === 'sword' ? 523 : 392;
   tone(base, 0.12, 0.18, 'sawtooth');
   setTimeout(() => tone(base * 1.5, 0.18, 0.18, 'sawtooth'), 90);
 }

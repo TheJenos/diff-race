@@ -3,7 +3,8 @@ import type { SkillParams } from './skills';
 /*
  * A bot's shooting: pick the nearest car it can see within range, aim at it with a wobble its
  * skill allows (and a delay before it reacts to a new target), fire when the guns are on it and
- * not about to overheat, launch a missile when close and lined up. Pure.
+ * not about to overheat, launch a missile when it's in the seeker's cone (missiles home, so close
+ * enough counts). Pure.
  */
 
 export interface GunnerTarget {
@@ -36,7 +37,9 @@ export interface GunnerDecision {
 
 /** Furthest it will shoot (m), and how close for a missile */
 const RANGE = 75;
-const MISSILE_RANGE = 45;
+const MISSILE_RANGE = 70;
+/** How far off the turret's line a car can be and still be locked by a missile's seeker (rad): half its cone, to be sure */
+const MISSILE_CONE = 0.3;
 
 export function gunner(
   self: { x: number; y: number; z: number; fx: number; fz: number; heat: number; locked: boolean; missiles: number },
@@ -80,8 +83,8 @@ export function gunner(
   else if (self.heat < 0.2) st.cooling = false;
   const coolEnough = !st.cooling;
   const fire = ready && coolEnough && aimError < 0.08 && d < RANGE;
-  // Missiles: close, roughly ahead, guns on target.
+  // Missiles home: fire when the car's in the seeker's cone (smart bots wait until it's ahead, where they can't miss).
   const ahead = ((best.x - self.x) * self.fx + (best.z - self.z) * self.fz) / Math.max(1, d);
-  const missile = ready && self.missiles > 0 && d < MISSILE_RANGE && aimError < 0.06 && (skill.smartItems ? ahead > 0.85 : rand() < dt * 0.8);
+  const missile = ready && self.missiles > 0 && d < MISSILE_RANGE && aimError < MISSILE_CONE && (skill.smartItems ? ahead > 0.6 : rand() < dt * 0.8);
   return { aim, fire, missile };
 }

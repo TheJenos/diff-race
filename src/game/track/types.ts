@@ -12,7 +12,7 @@ import type { ThemeId, TrackSpec } from './spec';
 
 export type Vec3 = { x: number; y: number; z: number };
 
-export type PadKind = 'sword' | 'shield' | 'skull';
+export type PadKind = 'gun' | 'sword' | 'shield' | 'skull';
 
 /**
  * A pad on the road: drive over it to arm (sword: offence), defend (shield), or spring a trap on

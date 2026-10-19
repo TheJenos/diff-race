@@ -372,6 +372,8 @@ export class Racers {
     r.car.view.group.visible = false;
     r.car.body.setActive(false);
     r.gun.armed = 0;
+    // The gun goes with the car: the next one comes from a gun pad.
+    r.gun.ammo = 0;
     this.events.wrecked(r, killer, source);
   }
 

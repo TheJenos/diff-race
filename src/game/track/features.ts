@@ -164,3 +164,49 @@ export function placeSkulls(rng: Rng, f: FeatureInput, taken: readonly TrackPad[
   }
   return out;
 }
+
+/** Where the row of gun pads after the start can go (m past the line) */
+export const GUN_ROW: readonly [number, number] = [140, 200];
+
+/**
+ * Gun pads: nobody has a gun until they drive over one. A row of three across the road soon after
+ * the start (the grid's scramble for guns), then two or three more round the lap, apart from the
+ * other pads and off the ramps.
+ */
+export function placeGuns(rng: Rng, f: FeatureInput, taken: readonly TrackPad[], ramps: readonly TrackRamp[]): TrackPad[] {
+  const lap = f.n * f.ds;
+  const out: TrackPad[] = [];
+  const apart = (a: number, b: number) => {
+    const d = Math.abs(a - b) % lap;
+    return Math.min(d, lap - d);
+  };
+  const clear = (s: number, gap: number) =>
+    !taken.some((p) => apart(p.s, s) < gap) && !out.some((p) => apart(p.s, s) < gap)
+    && !ramps.some((r) => s > r.s - 25 && s < r.s + r.len + RAMP_LANDING);
+  for (let k = 0; k < 16; k++) {
+    const s = rng.range(GUN_ROW[0], GUN_ROW[1]);
+    if (!clear(s, 25)) continue;
+    const hw = f.halfWidth[Math.floor(s / f.ds) % f.n] as number;
+    for (const side of [-0.62, 0, 0.62]) out.push({ s: q(s), u: q(side * (hw - 1.5)), kind: 'gun' });
+    break;
+  }
+  const want = rng.int(2, 3);
+  const candidates: number[] = [];
+  for (let s = GUN_ROW[1] + 120; s < lap; s += 8) {
+    if (inStartZone(s, lap) || !clear(s, 40)) continue;
+    candidates.push(s);
+  }
+  for (let k = 0, placed = 0; k < 240 && placed < want && candidates.length; k++) {
+    const s = rng.pick(candidates);
+    // Spread round the lap, not bunched.
+    if (out.some((p) => apart(p.s, s) < lap / (want + 3)) || !clear(s, 40)) continue;
+    const i = Math.floor(s / f.ds) % f.n;
+    const hw = f.halfWidth[i] as number;
+    const line = f.line[i] as number;
+    // On the racing line or off it, as the other pads: grabbing one can cost you the line.
+    const u = rng.chance(0.5) ? Math.max(-hw + 2, Math.min(hw - 2, line)) : (line >= 0 ? -1 : 1) * rng.range(3, hw - 2.5);
+    out.push({ s: q(s), u: q(u), kind: 'gun' });
+    placed++;
+  }
+  return out;
+}

@@ -57,8 +57,6 @@ export interface HudState {
   phase: GamePhase;
   /** Loading or failure message */
   status: string;
-  /** Pointer captured for turret aim (desktop) */
-  locked: boolean;
   /** Seconds of nitro in the tank, and the tank size */
   nitro: number;
   nitroTank: number;
@@ -85,6 +83,8 @@ export interface HudState {
   /** 0..1, and whether it's locked out overheated */
   heat: number;
   gunLocked: boolean;
+  /** Machine-gun rounds left (none until a gun pad) */
+  ammo: number;
   /** Seconds of armed spell left */
   armed: number;
   missiles: number;
@@ -108,9 +108,9 @@ export interface HudState {
 }
 
 const INITIAL: HudState = {
-  phase: 'loading', status: 'Loading…', locked: false, nitro: 0, nitroTank: 1, nitroActive: false, toast: null, trackName: '',
+  phase: 'loading', status: 'Loading…', nitro: 0, nitroTank: 1, nitroActive: false, toast: null, trackName: '',
   laps: 0, lap: 1, count: null, wrongWay: false, lapTimes: [], bestLap: null, lapDelta: null, results: null,
-  place: 1, cars: 1, armour: 1, armourMax: 1, heat: 0, gunLocked: false, armed: 0, missiles: 0, defence: null, weaponsHot: false,
+  place: 1, cars: 1, armour: 1, armourMax: 1, heat: 0, gunLocked: false, ammo: 0, armed: 0, missiles: 0, defence: null, weaponsHot: false,
   feed: [], banner: null, hits: 0, hurt: 0, hurtAngle: 0, standings: [], over: false, wreckedBy: null, replay: false,
 };
 

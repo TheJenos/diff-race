@@ -39,8 +39,7 @@ What's in them:
 | --- | --- | --- | --- |
 | Accelerate / brake, reverse | W / S (↑ / ↓) | RT / LT | automatic / BRAKE |
 | Steer | A D (← →) | left stick | drag on the left half |
-| Aim the turret | mouse (click to capture it) | right stick | drag on the right half |
-| Machine gun | left mouse | RB | FIRE |
+| Machine gun | left mouse / E | RB | FIRE |
 | Missile | right mouse / Q | LB | MSL |
 | Rear defence | F | X | DROP |
 | Handbrake / nitro | Space / Shift | A / B | SLIDE / NOS |
@@ -49,12 +48,21 @@ What's in them:
 ## How a race works
 
 ### Weapons and pads
-- **Machine gun:** always fitted. Hold to fire. It overheats after about 3 s and locks out for 1.5 s.
-- **Auto aim** (a setting, on by default):
-  - The turret locks onto the car nearest the middle of your view, within 110 m and in sight, and orange brackets mark it. You still fire.
-  - To pick another car, turn the camera; to cover your rear, look back.
+- **Pickups:** every pad shows its pickup hovering over a glowing ring, as in Arena FPS. Drive through to take it. It's gone from your view while it recharges for you (6 s), then fades back.
+- **Gun pads (amber):** nobody can shoot until they've picked up a gun.
+  - A pad loads 150 rounds (15 s of fire), up to 300. A wreck loses them.
+  - A row of three sits across the road just after the start, and two or three more round the lap.
+- **Machine gun:** hold to fire. It overheats after about 3 s and locks out for 1.5 s.
+- **The turret aims itself.** There's no manual aim; you drive and pull the trigger.
+  - It locks onto the car nearest the middle of your view, within 110 m and in sight, and orange brackets mark it. With nothing locked it points straight down the road.
+  - The crosshair follows the turret. To cover your rear, look back: the lock and the turret swing round with the camera.
   - Smoke, barriers and hills break the lock, and so does a car that's just respawned.
 - **Sword pads (red):** +2 missiles (up to 4), and the guns are *armed* for 8 s: harder hits and no overheating.
+- **Missiles are heat-seeking.**
+  - At launch a missile locks onto the car nearest its line of fire, within 140 m and in sight.
+  - It turns after the car at a limited rate and bursts when it gets within 2.4 m.
+  - A hard swerve at close range can make it overshoot. Driving into smoke, or dropping it behind you, shakes it off, and so does a wreck or a respawn.
+  - With nothing to lock onto, it flies straight.
 - **Sword pads (red)** sometimes bolt **ram spikes** onto your front plate for 12 s: your rams hit ×1.6 harder, and your front takes half.
 - **Shield pads (blue):** patch 25 armour and mend the worst-damaged panel. You also get one rear defence: oil slick, smoke screen, napalm, three mines or a **flamethrower** (3 s of fire out the back, 14 m long). Leaders tend to get oil, mines and the flamethrower, the back of the pack smoke and napalm.
 - **Skull pads (green):** a trap for whoever's ahead. A wall of fire springs up across the road 85 m on, for 5 s. Its kills are yours.
@@ -135,7 +143,7 @@ The free Spark plan allows 100 simultaneous connections; use Blaze for more.
 
 5. Launch the Activity from a voice channel. Everyone in the channel shares one room, whose code comes from the Activity instance. The first in is the host.
 
-Inside Discord, `src/discord/patch.ts` routes Firebase and the functions through Discord's proxy. It's imported before anything else, as in Arena FPS. If pointer lock is refused, aim by dragging with the right mouse button.
+Inside Discord, `src/discord/patch.ts` routes Firebase and the functions through Discord's proxy. It's imported before anything else, as in Arena FPS.
 
 ## Kit models
 

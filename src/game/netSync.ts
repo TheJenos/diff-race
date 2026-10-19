@@ -57,7 +57,9 @@ export class NetSync {
       }),
     );
     combat.net = {
-      missile: (owner, pos, vel) => conn.pushEvent({ k: 'missile', by: owner.id, x: r2(pos.x), y: r2(pos.y), z: r2(pos.z), vx: r2(vel.x), vy: r2(vel.y), vz: r2(vel.z) }),
+      missile: (owner, pos, vel, target) => conn.pushEvent({
+        k: 'missile', by: owner.id, x: r2(pos.x), y: r2(pos.y), z: r2(pos.z), vx: r2(vel.x), vy: r2(vel.y), vz: r2(vel.z), ...(target ? { v: target.id } : {}),
+      }),
       boom: (x, y, z, radius, damage, push, owner, source) => conn.pushEvent({ k: 'boom', by: owner?.id ?? '', x: r2(x), y: r2(y), z: r2(z), r: radius, dmg: damage, push, w: source }),
       hazard: (h) => conn.addHazard({ k: h.kind as HazardRecord['k'], x: r2(h.x), y: r2(h.y), z: r2(h.z), by: h.owner.id, until: Math.round(conn.serverNow() + h.until * 1000) }),
       claim: (id) => conn.claimHazard(id),
@@ -106,7 +108,7 @@ export class NetSync {
       this.hooks.wrecked(victim, killer, e.w as DamageSource);
     } else if (e.k === 'missile') {
       const owner = this.racers.get(e.by);
-      if (owner && owner.remote) this.combat.visualMissile(owner, e, { x: e.vx, y: e.vy, z: e.vz });
+      if (owner && owner.remote) this.combat.visualMissile(owner, e, { x: e.vx, y: e.vy, z: e.vz }, e.v ? this.racers.get(e.v) ?? null : null);
     } else if (e.k === 'boom') {
       const owner = e.by ? this.racers.get(e.by) ?? null : null;
       this.combat.remoteBoom(e.x, e.y, e.z, e.r, e.dmg, e.push, owner, e.w === 'mine' ? 'mine' : 'missile', now);
@@ -191,7 +193,7 @@ export function snapshotOf(r: Racer, out: CarSnapshot): CarSnapshot {
   out.D = r.progress.D;
   out.armour = Math.ceil(r.damage.armour);
   const now = performance.now() / 1000;
-  out.flags = (r.input.fire && r.gun.locked <= 0 ? FLAG.firing : 0)
+  out.flags = (r.input.fire && r.gun.locked <= 0 && r.gun.ammo > 0 ? FLAG.firing : 0)
     | (r.car.body.nitroActive ? FLAG.nitro : 0)
     | (r.wrecked ? FLAG.wrecked : 0)
     | (r.ghost(now) ? FLAG.ghost : 0)

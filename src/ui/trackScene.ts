@@ -16,8 +16,8 @@ import { placeOnTrack } from '../game/race/placement';
 /** At night the lights are on: this many floodlights lit (spread round the loop), and a moon over it all */
 const FLOODLIGHTS = 8;
 
-/** Marker colours: the start, sword pads, shield pads, skull traps, ramps */
-const MARK = { start: 0xffffff, sword: 0xff3a20, shield: 0x2a7bff, skull: 0x9cff3a, ramp: 0xff9a1a };
+/** Marker colours: the start, gun pads, sword pads, shield pads, skull traps, ramps */
+const MARK = { start: 0xffffff, gun: 0xffb020, sword: 0xff3a20, shield: 0x2a7bff, skull: 0x9cff3a, ramp: 0xff9a1a };
 
 export interface TrackScene {
   scene: THREE.Scene;

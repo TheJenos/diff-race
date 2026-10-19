@@ -263,25 +263,10 @@ input:focus { border-color: var(--accent); outline: none; }
 
 #pause-overlay { pointer-events: auto; }
 
-#aim-hint {
-  position: absolute;
-  left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  font-family: system-ui, sans-serif;
-  font-size: 13px;
-  color: var(--muted);
-  background: var(--glass);
-  border: 1px solid var(--glass-line);
-  border-radius: 999px;
-  padding: 6px 14px;
-}
-
 /* ---------- Touch controls ---------- */
 
 #touch-controls { position: absolute; inset: 0; touch-action: none; --u: clamp(52px, 9vmin, 76px); }
-.touch-steer { position: absolute; left: 0; top: 0; bottom: 0; width: 45%; }
-.touch-look { position: absolute; right: 0; top: 0; bottom: 0; width: 55%; }
+.touch-steer { position: absolute; left: 0; top: 0; bottom: 0; width: 55%; }
 .touch-knob {
   position: absolute;
   width: 140px;
@@ -413,12 +398,19 @@ input:focus { border-color: var(--accent); outline: none; }
 #hud-weapons .gun.locked small { color: var(--danger); }
 #hud-weapons .defence { border-color: rgba(58, 139, 255, 0.4); }
 
-#crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+/* The crosshair sits where the turret points (moved by the game; the screen's middle until then) */
+#aim-point { position: absolute; left: 0; top: 0; transform: translate(50vw, 50vh); pointer-events: none; will-change: transform; }
+#aim-point[hidden] { display: none; }
+#crosshair { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: none; }
 #crosshair .ring { fill: none; stroke: rgba(255, 255, 255, 0.25); stroke-width: 2; }
 #crosshair .heat { fill: none; stroke: #ff8a2a; stroke-width: 3; }
 #crosshair .cross { stroke: #fff; stroke-width: 2.5; stroke-linecap: round; filter: drop-shadow(0 0 2px #000); }
 #crosshair .marker { stroke: #ff3a20; stroke-width: 3; stroke-linecap: round; }
 #crosshair.locked .cross { stroke: var(--danger); }
+/* No gun yet: the crosshair is faded until there's something to fire */
+#crosshair.empty { opacity: 0.4; }
+#hud-weapons .gun.empty { opacity: 0.6; }
+#hud-weapons .gun.empty small { color: #ffb020; }
 /* Auto aim's lock: corner brackets over the target, placed by the game each frame */
 #lock-on { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform; }
 #lock-on[hidden] { display: none; }

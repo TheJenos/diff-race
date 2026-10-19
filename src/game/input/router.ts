@@ -6,11 +6,9 @@ import { MouseInput } from './mouse';
 import { TouchInput } from './touch';
 
 /*
- * Every input source, read once per frame into one CarInput plus the frame's aim (camera and
- * turret, radians). Remembers which device was used last, for the HUD's button hints.
+ * Every input source, read once per frame into one CarInput. There's no aiming: the turret aims
+ * itself (game.ts), and the player drives and pulls the triggers.
  */
-
-export type Device = 'keyboard' | 'gamepad' | 'touch';
 
 export class InputRouter {
   readonly keyboard: Keyboard;
@@ -18,38 +16,23 @@ export class InputRouter {
   readonly touch = new TouchInput();
   readonly mouse: MouseInput;
   readonly input: CarInput = neutralInput();
-  aimX = 0;
-  aimY = 0;
-  /** Whether the player aimed this frame (the camera recentres after a while without) */
-  aimed = false;
   pause = false;
-  lastDevice: Device = 'keyboard';
   /** Held by the e2e tests (game.test.hold) */
   test: CarInput = neutralInput();
 
-  constructor(canvas: HTMLElement, signal: AbortSignal, enabled: () => boolean, onLock: (locked: boolean) => void) {
+  constructor(canvas: HTMLElement, signal: AbortSignal, enabled: () => boolean) {
     this.keyboard = new Keyboard(signal, enabled);
-    this.mouse = new MouseInput(canvas, signal, enabled, onLock);
+    this.mouse = new MouseInput(canvas, signal, enabled);
   }
 
-  read(dt: number): CarInput {
-    const s = settings.get();
+  read(): CarInput {
     const keys = this.keyboard.read();
-    const pad = this.gamepad.read(dt, s.deadzone);
+    const pad = this.gamepad.read(settings.get().deadzone);
     const touch = this.touch.read();
-    const mouse = this.mouse.take();
-    keys.fire = this.mouse.fire;
-    keys.missile ||= mouse.missile;
-    mergeInputs([keys, pad, touch.input, this.test], this.input);
-    const invert = s.invertY ? -1 : 1;
-    const g = this.gamepad;
-    this.aimX = (mouse.aimX + touch.aimX + g.aimX) * s.sensitivity;
-    this.aimY = (mouse.aimY + touch.aimY + g.aimY) * s.sensitivity * invert;
-    this.aimed = this.aimX !== 0 || this.aimY !== 0;
+    keys.fire ||= this.mouse.fire;
+    keys.missile ||= this.mouse.take();
+    mergeInputs([keys, pad, touch, this.test], this.input);
     this.pause = this.gamepad.pause;
-    if (pad.throttle || pad.brake || pad.steer || g.aimX) this.lastDevice = 'gamepad';
-    else if (keys.throttle || keys.brake || keys.steer) this.lastDevice = 'keyboard';
-    else if (this.touch.active) this.lastDevice = 'touch';
     return this.input;
   }
 

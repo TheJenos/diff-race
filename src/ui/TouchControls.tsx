@@ -7,13 +7,11 @@ interface Props {
 
 /** Pixels of drag from where the thumb landed to full steering lock */
 const STEER_RANGE = 70;
-/** Radians of aim per pixel of look drag */
-const LOOK_RATE = 0.006;
 
 /**
  * Touch controls: the left half of the screen steers (drag left and right from wherever the
- * thumb lands), the right half aims (drag), and buttons on the right brake, slide, boost and
- * respawn. The car accelerates on its own unless braking (a setting). Pointer events with
+ * thumb lands), and buttons on the right fire, brake, slide, boost and respawn (the turret aims
+ * itself). The car accelerates on its own unless braking (a setting). Pointer events with
  * capture, so a thumb sliding off a button still lets go of it.
  */
 /** Keep a thumb's moves coming to where it went down. Some browsers throw for a pointer they don't track (synthetic ones); then it just isn't captured. */
@@ -28,7 +26,6 @@ function capture(e: React.PointerEvent<HTMLElement>): void {
 export function TouchControls({ touch }: Props) {
   const knob = useRef<HTMLDivElement>(null);
   const steer = useRef<{ id: number; x: number; y: number } | null>(null);
-  const look = useRef<{ id: number; x: number; y: number } | null>(null);
 
   useEffect(() => () => touch.clear(), [touch]);
 
@@ -55,20 +52,6 @@ export function TouchControls({ touch }: Props) {
     touch.setSteer(0);
     if (knob.current) knob.current.hidden = true;
   };
-  const lookDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    capture(e);
-    look.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
-  };
-  const lookMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const l = look.current;
-    if (!l || l.id !== e.pointerId) return;
-    touch.look((e.clientX - l.x) * LOOK_RATE, (e.clientY - l.y) * LOOK_RATE);
-    l.x = e.clientX;
-    l.y = e.clientY;
-  };
-  const lookUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (look.current?.id === e.pointerId) look.current = null;
-  };
   /** A button that's held: down on press, up on release or when the thumb is lost */
   const hold = (set: (on: boolean) => void) => ({
     onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -84,7 +67,6 @@ export function TouchControls({ touch }: Props) {
   return (
     <div id="touch-controls">
       <div className="touch-steer" onPointerDown={steerDown} onPointerMove={steerMove} onPointerUp={steerUp} onPointerCancel={steerUp} />
-      <div className="touch-look" onPointerDown={lookDown} onPointerMove={lookMove} onPointerUp={lookUp} onPointerCancel={lookUp} />
       <div ref={knob} className="touch-knob" hidden><span /></div>
       <div className="touch-combat">
         <button type="button" id="touch-fire" className="touch-btn fire" {...hold((on) => touch.setFire(on))}>FIRE</button>

@@ -6,17 +6,18 @@ import type { Effects } from '../world/effects';
 import type { TrackData } from '../track/types';
 import type { Surface } from '../car/params';
 import { patch, zoneAt } from '../car/damage';
-import { arm, roundDamage, stepGun } from './rules/heat';
+import { arm, loadGun, roundDamage, stepGun } from './rules/heat';
 import { DEFENCE, GUN, MISSILE, PAD, SPIKES, TRAP, type DefenceKind, type HazardKind } from './rules/weapons';
 import { rayBox, toBoxSpace, type Box } from './rules/hitTest';
+import { seekScore, steer } from './rules/homing';
 import { loopDelta } from '../race/progress';
 import { basis } from '../math/vec3';
 import { FLAG } from '../../net/carCodec';
 
 /*
  * Weapons and pads, for every car simulated on this client: the machine gun's rounds (hitscan:
- * a ray against the world and against each car's box), missiles (projectiles with a splash),
- * the rear defences (oil, smoke, napalm, mines) and the sword and shield pads on the road.
+ * a ray against the world and against each car's box), missiles (heat-seeking, with a splash),
+ * the rear defences (oil, smoke, napalm, mines) and the pads on the road (gun, sword, shield, skull).
  * Damage goes through Racers.hurt, so kills and wrecks are handled in one place.
  */
 
@@ -26,14 +27,14 @@ export interface CombatEvents {
   fired(shooter: Racer): void;
   missile(shooter: Racer): void;
   explosion(x: number, y: number, z: number, size: number): void;
-  pickup(r: Racer, kind: 'sword' | 'shield' | 'skull', defence: DefenceKind | null, spikes: boolean): void;
+  pickup(r: Racer, kind: 'gun' | 'sword' | 'shield' | 'skull', defence: DefenceKind | null, spikes: boolean): void;
   dropped(r: Racer, kind: DefenceKind): void;
 }
 
 /** Where combat meets the network (rooms only): what other clients must hear about */
 export interface CombatNet {
-  /** A local car fired a missile (others draw it) */
-  missile(owner: Racer, pos: THREE.Vector3, vel: THREE.Vector3): void;
+  /** A local car fired a missile, chasing `target` (others draw it) */
+  missile(owner: Racer, pos: THREE.Vector3, vel: THREE.Vector3, target: Racer | null): void;
   /** A blast here (others apply its splash to their own cars) */
   boom(x: number, y: number, z: number, radius: number, damage: number, push: number, owner: Racer | null, source: 'missile' | 'mine'): void;
   /** A local car dropped this hazard: returns its id in the room */
@@ -50,6 +51,8 @@ interface Missile {
   mesh: THREE.Mesh;
   /** Another client's missile: drawn here, its blast decided there */
   visual: boolean;
+  /** The car it's chasing (null once it's lost it, or if it never had one) */
+  target: Racer | null;
 }
 
 interface Hazard {
@@ -127,7 +130,7 @@ export class Combat {
       const shots = stepGun(r.gun, this.hot && r.input.fire, dt);
       for (let k = 0; k < shots; k++) this.fireRound(r, now);
       if (shots) this.events.fired(r);
-      if (this.hot && r.input.missile && r.missiles > 0) this.launch(r);
+      if (this.hot && r.input.missile && r.missiles > 0) this.launch(r, now);
       if (this.hot && r.input.defence && r.defence) this.drop(r, now);
       if (r.flaming > 0) this.flame(r, dt, now);
       this.pads(r, now);
@@ -188,27 +191,51 @@ export class Combat {
     this.tracerLife[i] = TRACER_LIFE;
   }
 
-  private launch(r: Racer): void {
+  private launch(r: Racer, now: number): void {
     r.missiles--;
     const o = new THREE.Vector3();
     const d = new THREE.Vector3();
     this.racers.muzzle(r, o, d);
+    const target = this.seek(r, o, d, now);
     const v = r.car.body.body.linvel();
     const mesh = new THREE.Mesh(this.geos.missile, this.mats.missile);
     mesh.position.copy(o);
     this.group.add(mesh);
     const vel = d.multiplyScalar(MISSILE.speed).add(new THREE.Vector3(v.x, v.y, v.z));
-    this.missiles.push({ owner: r, pos: o, vel, age: 0, mesh, visual: false });
-    this.net?.missile(r, o, vel);
+    this.missiles.push({ owner: r, pos: o, vel, age: 0, mesh, visual: false, target });
+    this.net?.missile(r, o, vel, target);
     this.events.missile(r);
   }
 
-  /** Another client's missile: flown here for show; its blast comes as a boom (remoteBoom) */
-  visualMissile(owner: Racer, pos: { x: number; y: number; z: number }, vel: { x: number; y: number; z: number }): void {
+  /** The car a missile fired from `pos` along `dir` (unit) locks onto: the seeker's best that's in sight and out of smoke */
+  private seek(owner: Racer, pos: THREE.Vector3, dir: THREE.Vector3, now: number): Racer | null {
+    let best: Racer | null = null;
+    let bestScore = Infinity;
+    for (const r of this.racers.list) {
+      if (r === owner || r.wrecked || r.ghost(now)) continue;
+      const p = r.car.position;
+      const c = { x: p.x, y: p.y + 0.3, z: p.z };
+      const score = seekScore(pos, dir, c);
+      if (score === null || score >= bestScore) continue;
+      if (this.inSmoke(p.x, p.z) || this.smokeBetween(pos.x, pos.z, p.x, p.z)) continue;
+      const dx = c.x - pos.x;
+      const dy = c.y - pos.y;
+      const dz = c.z - pos.z;
+      const dist = Math.hypot(dx, dy, dz);
+      this.d.set(dx / dist, dy / dist, dz / dist);
+      if (this.physics.castRay(pos, this.d, Math.max(0, dist - 2), GROUP.WORLD | GROUP.BARRIER, this.hit)) continue;
+      best = r;
+      bestScore = score;
+    }
+    return best;
+  }
+
+  /** Another client's missile: flown here for show (chasing the same car); its blast comes as a boom (remoteBoom) */
+  visualMissile(owner: Racer, pos: { x: number; y: number; z: number }, vel: { x: number; y: number; z: number }, target: Racer | null): void {
     const mesh = new THREE.Mesh(this.geos.missile, this.mats.missile);
     mesh.position.set(pos.x, pos.y, pos.z);
     this.group.add(mesh);
-    this.missiles.push({ owner, pos: new THREE.Vector3(pos.x, pos.y, pos.z), vel: new THREE.Vector3(vel.x, vel.y, vel.z), age: 0, mesh, visual: true });
+    this.missiles.push({ owner, pos: new THREE.Vector3(pos.x, pos.y, pos.z), vel: new THREE.Vector3(vel.x, vel.y, vel.z), age: 0, mesh, visual: true, target });
     this.events.missile(owner);
   }
 
@@ -231,6 +258,7 @@ export class Combat {
     for (let i = this.missiles.length - 1; i >= 0; i--) {
       const m = this.missiles[i]!;
       m.age += dt;
+      if (m.target) this.home(m, dt, now);
       const step = m.vel.length() * dt;
       this.d.copy(m.vel).normalize();
       let hitAt = step;
@@ -248,7 +276,9 @@ export class Combat {
         }
       }
       m.pos.addScaledVector(this.d, hitAt);
-      m.vel.y -= 2 * dt;
+      // Close enough to its car: the proximity fuse.
+      if (m.target && !hit && m.pos.distanceTo(m.target.car.position) < MISSILE.seek.fuse) hit = true;
+      if (!m.target) m.vel.y -= 2 * dt;
       m.mesh.position.copy(m.pos);
       m.mesh.lookAt(m.pos.x + m.vel.x, m.pos.y + m.vel.y, m.pos.z + m.vel.z);
       this.effects.emit(m.pos.x, m.pos.y, m.pos.z, 0, 0.5, 0, 0.75, 0.72, 0.68, 0.5, 0.7, 0.4, 1.4);
@@ -260,6 +290,18 @@ export class Combat {
         this.missiles.splice(i, 1);
       }
     }
+  }
+
+  /** Steer a missile after its car, or let it go: wrecked, ghosted, hidden in smoke, or overshot */
+  private home(m: Missile, dt: number, now: number): void {
+    const t = m.target!;
+    const p = t.car.position;
+    if (t.wrecked || t.ghost(now) || this.inSmoke(p.x, p.z) || this.inSmoke(m.pos.x, m.pos.z)) {
+      m.target = null;
+      return;
+    }
+    const v = t.car.body.body.linvel();
+    if (!steer(m.pos, m.vel, { x: p.x, y: p.y + 0.3, z: p.z }, v, dt)) m.target = null;
   }
 
   /**
@@ -452,7 +494,10 @@ export class Combat {
       if (Math.abs(loopDelta(r.loc.s, p.s, t.lapLength)) > PAD.reach || Math.abs(r.loc.u - p.u) > PAD.reach) continue;
       if ((r.pickups.cooldowns.get(i) ?? -Infinity) > now) continue;
       r.pickups.cooldowns.set(i, now + PAD.cooldown);
-      if (p.kind === 'sword') {
+      if (p.kind === 'gun') {
+        loadGun(r.gun);
+        this.events.pickup(r, 'gun', null, false);
+      } else if (p.kind === 'sword') {
         r.missiles = Math.min(MISSILE.max, r.missiles + MISSILE.perPad);
         arm(r.gun);
         const spikes = Math.random() < SPIKES.chance;

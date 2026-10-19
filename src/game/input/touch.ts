@@ -2,7 +2,7 @@ import { neutralInput, type CarInput } from './carInput';
 
 /*
  * Touch controls' state: TouchControls.tsx (React, pointer events) writes it, the game reads it
- * each frame like any other input source. Look drags accumulate until read.
+ * each frame like any other input source.
  */
 
 export class TouchInput {
@@ -10,8 +10,6 @@ export class TouchInput {
   /** Accelerate on its own unless braking (the setting; default on for touch) */
   autoAccelerate = true;
   active = false;
-  private lookX = 0;
-  private lookY = 0;
   private respawnAsked = false;
 
   setSteer(v: number): void { this.input.steer = Math.max(-1, Math.min(1, v)); this.active = true; }
@@ -24,25 +22,14 @@ export class TouchInput {
   tapMissile(): void { this.input.missile = true; }
   tapDefence(): void { this.input.defence = true; }
   tapRespawn(): void { this.respawnAsked = true; }
-  /** A look drag (rad) */
-  look(dx: number, dy: number): void {
-    this.lookX += dx;
-    this.lookY += dy;
-  }
-
-  /** This frame's input, and the look drag since the last read */
-  read(): { input: CarInput; aimX: number; aimY: number } {
+  /** This frame's input */
+  read(): CarInput {
     const i = this.input;
     const out = {
-      input: {
-        ...i,
-        throttle: this.active && this.autoAccelerate && i.brake <= 0 ? 1 : i.throttle,
-        respawn: this.respawnAsked,
-      },
-      aimX: this.lookX,
-      aimY: this.lookY,
+      ...i,
+      throttle: this.active && this.autoAccelerate && i.brake <= 0 ? 1 : i.throttle,
+      respawn: this.respawnAsked,
     };
-    this.lookX = this.lookY = 0;
     this.respawnAsked = false;
     i.missile = false;
     i.defence = false;
@@ -51,6 +38,5 @@ export class TouchInput {
 
   clear(): void {
     Object.assign(this.input, neutralInput());
-    this.lookX = this.lookY = 0;
   }
 }

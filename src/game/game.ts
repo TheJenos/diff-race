@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { applyQuality, createRenderer } from './renderer';
 import { HudStore } from './hudStore';
-import { GROUP, loadPhysics, PhysicsWorld, type RayHit } from './physics';
+import { loadPhysics, PhysicsWorld } from './physics';
 import { settings, speedIn } from './settings';
 import { TOUCH } from './device';
 import { DynamicResolution } from './dynamicResolution';
@@ -12,6 +12,7 @@ import { ChaseCamera, type ChaseTarget } from './camera/chase';
 import { Environment } from './world/environment';
 import { buildTrackMesh, type TrackMesh } from './world/trackMesh';
 import { buildTrackPhysics } from './world/trackPhysics';
+import { PadPickups } from './world/pickups';
 import { buildScenery, NightLights, type SceneryMesh } from './world/sceneryMesh';
 import { THEMES } from './track/themes';
 import type { TrackData } from './track/types';
@@ -23,9 +24,8 @@ import { CarSounds } from './sfx';
 import { initAudio } from './audio';
 import { Effects } from './world/effects';
 import { RaceSession, type SessionSetup } from './raceSession';
-import { rayBox, type Box } from './combat/rules/hitTest';
-import { arm } from './combat/rules/heat';
-import type { DefenceKind } from './combat/rules/weapons';
+import { arm, loadGun } from './combat/rules/heat';
+import { GUN, type DefenceKind } from './combat/rules/weapons';
 import type { Racer } from './racer';
 import { Replay } from './replay';
 import { AutoAim } from './autoAim';
@@ -51,15 +51,15 @@ export interface Readouts {
   gapBehind?: HTMLElement | null;
   /** The auto-aim lock marker, moved over the locked car */
   lock?: HTMLElement | null;
+  /** The crosshair, moved to where the turret points */
+  aim?: HTMLElement | null;
 }
 
 /** `?debug` in the URL: the frame-rate chip also shows draw calls and triangles */
 const DEBUG = new URLSearchParams(location.search).has('debug');
 
-/** How far the crosshair's aim reaches (m) */
-const AIM_RANGE = 200;
-/** Aim assist pulls toward a car this close to the crosshair (rad) */
-const ASSIST_CONE = 0.07;
+/** With nothing locked, the turret points this far straight ahead (m) */
+const AHEAD = 60;
 
 export class Game {
   readonly hud = new HudStore();
@@ -74,12 +74,11 @@ export class Game {
   private input: CarInput = neutralInput();
   /** One-shot buttons (respawn, missile, defence) go to the first physics step of a frame only */
   private oneShotsTaken = false;
-  /** Seconds since the player last aimed (the camera swings back behind the car after a while) */
-  private sinceAim = 99;
-  /** The pause menu toggles when the gamepad's Start is pressed or the pointer is released */
+  /** The pause menu toggles when the gamepad's Start is pressed */
   onPauseRequest: (() => void) | null = null;
   private readonly env: Environment;
   private readonly trackMesh: TrackMesh;
+  private readonly pickups: PadPickups;
   private readonly scenery: SceneryMesh;
   private readonly effects: Effects;
   private readonly nightLights: NightLights | null;
@@ -99,13 +98,11 @@ export class Game {
   /** The car auto aim has locked onto this frame */
   private locked: Racer | null = null;
   private readonly lockAt = new THREE.Vector3();
+  private readonly aimAt = new THREE.Vector3();
   private readonly replay = new Replay();
   private wasWrecked = false;
   private readonly resize: ResizeObserver;
   private readonly unsubSettings: () => void;
-  private readonly ray = new THREE.Raycaster();
-  private readonly hit: RayHit = { toi: 0, nx: 0, ny: 1, nz: 0, collider: 0 };
-  private readonly box: Box = { cx: 0, cy: 0, cz: 0, qx: 0, qy: 0, qz: 0, qw: 1, hx: 1, hy: 1, hz: 1 };
 
   constructor(private readonly container: HTMLElement, private readonly options: GameOptions) {
     this.track = options.track;
@@ -115,18 +112,15 @@ export class Game {
     this.env = new Environment(this.scene, THEMES[this.track.theme], quality);
     this.trackMesh = buildTrackMesh(this.track, quality !== 'low');
     this.scene.add(this.trackMesh.group);
+    this.pickups = new PadPickups(this.track);
+    this.scene.add(this.pickups.group);
     this.scenery = buildScenery(this.track, quality, quality === 'high');
     this.scene.add(this.scenery.group);
     this.effects = new Effects(quality);
     this.scene.add(this.effects.group);
     const night = THEMES[this.track.theme].night;
     this.nightLights = night ? new NightLights(this.scene, this.scenery.floodlights, quality === 'low' ? 2 : 5) : null;
-    this.inputs = new InputRouter(this.renderer.domElement, this.abort.signal, () => this.hud.get().phase === 'ready' && !this.paused,
-      (locked) => {
-        this.hud.update({ locked });
-        // Esc while aiming releases the pointer without a keydown reaching the page: treat it as pause.
-        if (!locked && !this.paused && !this.session?.player.progress.finished) this.onPauseRequest?.();
-      });
+    this.inputs = new InputRouter(this.renderer.domElement, this.abort.signal, () => this.hud.get().phase === 'ready' && !this.paused);
     this.inputs.touch.autoAccelerate = settings.get().autoAccelerate;
     this.dynamicRes = TOUCH ? new DynamicResolution({ max: this.renderer.getPixelRatio() }) : null;
     this.resize = new ResizeObserver(() => this.fit());
@@ -187,7 +181,6 @@ export class Game {
   setPaused(paused: boolean): void {
     this.paused = paused && !this.options.setup.room;
     this.inputs.clear();
-    if (paused) this.inputs.mouse.unlock();
   }
 
   private fit(): void {
@@ -232,15 +225,16 @@ export class Game {
     const session = this.session;
     const physics = this.physics;
     if (session && physics) {
-      this.input = this.inputs.read(dt);
+      this.input = this.inputs.read();
       this.oneShotsTaken = false;
       if (this.inputs.pause) this.onPauseRequest?.();
       const alpha = this.paused ? 1 : physics.update(dt);
       session.racers.eye.x = this.camera.position.x;
       session.racers.eye.z = this.camera.position.z;
       session.frame(this.paused ? 0 : dt, alpha);
+      // The pads' pickups, on the race's clock (cooldowns are kept on it).
+      this.pickups.update(performance.now() / 1000, session.player.pickups.cooldowns);
       this.effects.update(this.paused ? 0 : dt);
-      this.aim(dt);
       const player = session.player;
       const now = performance.now() / 1000;
       // The player just got wrecked: replay it (if the setting's on).
@@ -254,6 +248,7 @@ export class Game {
           this.hud.update({ replay: false });
         } else {
           this.drawLock(null);
+          this.drawAim(null);
           this.renderer.render(this.scene, this.camera);
           this.countFps(frameTime);
           return;
@@ -271,11 +266,14 @@ export class Game {
         this.camera.updateProjectionMatrix();
       }
       const held = this.testAim ? session.racers.get(this.testAim) : undefined;
-      const auto = !held && !player.wrecked && settings.get().autoAim && this.options.setup.rules.weapons;
+      // The turret aims itself: at the car auto aim has locked onto, else straight down the road.
+      const auto = !held && !player.wrecked && this.options.setup.rules.weapons;
       this.locked = auto && this.autoAim ? this.autoAim.update(player, this.camera, dt) : null;
       const target = held ?? this.locked;
-      if (!player.wrecked) player.aim = target ? { x: target.car.position.x, y: target.car.position.y + 0.3, z: target.car.position.z } : this.aimPoint(player);
-      this.drawLock(player.progress.finished ? null : this.locked);
+      if (!player.wrecked) player.aim = target ? { x: target.car.position.x, y: target.car.position.y + 0.3, z: target.car.position.z } : this.ahead(player);
+      const done = player.progress.finished || player.wrecked;
+      this.drawLock(done ? null : this.locked);
+      this.drawAim(done ? null : player.aim);
       this.env.follow(player.car.position, this.camera);
       this.nightLights?.update(player.car.position);
       this.writeReadouts(session);
@@ -294,61 +292,13 @@ export class Game {
     this.countFps(frameTime);
   }
 
-  /** The player's aim orbits the camera; left alone for a while, it swings back behind the car. */
-  private aim(dt: number): void {
-    const c = this.chase;
-    const r = this.inputs;
-    if (r.aimed) {
-      this.sinceAim = 0;
-      c.aimYaw -= r.aimX;
-      c.aimPitch = Math.max(-0.3, Math.min(0.55, c.aimPitch + r.aimY));
-    } else {
-      this.sinceAim += dt;
-      if (settings.get().recentre && this.sinceAim > 1.5) {
-        const k = 1 - Math.exp(-2.5 * dt);
-        c.aimYaw = Math.atan2(Math.sin(c.aimYaw), Math.cos(c.aimYaw)) * (1 - k);
-        c.aimPitch += (0 - c.aimPitch) * k;
-      }
-    }
-  }
-
-  /**
-   * Where the crosshair points: the first thing a ray from the camera through the screen's centre
-   * meets (the track, a barrier, a car). On gamepad and touch, aim assist pulls it onto a car near
-   * the crosshair.
-   */
-  private aimPoint(player: Racer): { x: number; y: number; z: number } {
-    const session = this.session!;
-    this.ray.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-    const o = this.ray.ray.origin;
-    const d = this.ray.ray.direction;
-    // Start the ray past the player's own car.
-    const skip = Math.max(0, this.chase.pos.y > 0 ? o.distanceTo(player.car.position) - 1.5 : 0);
-    const start = { x: o.x + d.x * skip, y: o.y + d.y * skip, z: o.z + d.z * skip };
-    let range = AIM_RANGE;
-    if (this.physics!.castRay(start, d, range, GROUP.WORLD | GROUP.BARRIER, this.hit)) range = this.hit.toi;
-    let best: { x: number; y: number; z: number } | null = null;
-    const assist = settings.get().aimAssist && this.inputs.lastDevice !== 'keyboard';
-    let bestAngle = ASSIST_CONE;
-    for (const r of session.racers.list) {
-      if (r === player || r.wrecked) continue;
-      const t = rayBox(start, d, range, session.racers.boxOf(r, this.box));
-      if (t !== null && t < range) {
-        range = t;
-        best = null;
-      }
-      if (assist) {
-        const p = r.car.position;
-        const to = new THREE.Vector3(p.x - o.x, p.y + 0.3 - o.y, p.z - o.z);
-        const dist = to.length();
-        const angle = to.angleTo(d);
-        if (dist < 120 && angle < bestAngle) {
-          bestAngle = angle;
-          best = { x: p.x, y: p.y + 0.3, z: p.z };
-        }
-      }
-    }
-    return best ?? { x: start.x + d.x * range, y: start.y + d.y * range, z: start.z + d.z * range };
+  /** Where the turret points with nothing locked: straight ahead of the car (behind it while looking back), at the guns' height */
+  private ahead(player: Racer): { x: number; y: number; z: number } {
+    const fwd = { x: 0, y: 0, z: 0 };
+    basis(player.car.view.group.quaternion, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, fwd);
+    const k = this.input.lookBack ? -AHEAD : AHEAD;
+    const p = player.car.position;
+    return { x: p.x + fwd.x * k, y: p.y + player.car.view.gunHeight + fwd.y * k, z: p.z + fwd.z * k };
   }
 
   /** The lock marker over the car auto aim is on (hidden with none, or when it's behind the camera) */
@@ -362,6 +312,19 @@ export class Game {
     if (!show) return;
     const canvas = this.renderer.domElement;
     el.style.transform = `translate(${((v.x + 1) / 2) * canvas.clientWidth}px, ${((1 - v.y) / 2) * canvas.clientHeight}px) translate(-50%, -50%)`;
+  }
+
+  /** The crosshair over the turret's aim point (hidden with none, or when it's off screen) */
+  private drawAim(point: { x: number; y: number; z: number } | null): void {
+    const el = this.readouts.aim;
+    if (!el) return;
+    const v = this.aimAt;
+    if (point) v.set(point.x, point.y, point.z).project(this.camera);
+    const show = point !== null && v.z < 1 && Math.abs(v.x) < 1 && Math.abs(v.y) < 1;
+    el.hidden = !show;
+    if (!show) return;
+    const canvas = this.renderer.domElement;
+    el.style.transform = `translate(${((v.x + 1) / 2) * canvas.clientWidth}px, ${((1 - v.y) / 2) * canvas.clientHeight}px)`;
   }
 
   private writeReadouts(session: RaceSession): void {
@@ -480,10 +443,11 @@ export class Game {
         r.car.body.setGhost(false);
       },
       freezeBots: (on: boolean) => { if (this.session) this.session.bots.frozen = on; },
-      give: (what: 'missiles' | 'armed' | DefenceKind) => {
+      give: (what: 'gun' | 'missiles' | 'armed' | DefenceKind) => {
         const p = player();
         if (!p) return;
-        if (what === 'missiles') p.missiles = 4;
+        if (what === 'gun') loadGun(p.gun, GUN.max);
+        else if (what === 'missiles') p.missiles = 4;
         else if (what === 'armed') arm(p.gun);
         else p.defence = what;
       },
@@ -506,11 +470,11 @@ export class Game {
     this.resize.disconnect();
     this.unsubSettings();
     this.inputs.clear();
-    this.inputs.mouse.unlock();
     this.sounds?.dispose();
     this.session?.dispose();
     this.physics?.dispose();
     this.trackMesh.dispose();
+    this.pickups.dispose();
     this.scenery.dispose();
     this.effects.dispose();
     this.nightLights?.dispose();
