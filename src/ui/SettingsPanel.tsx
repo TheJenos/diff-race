@@ -64,7 +64,7 @@ export function SettingsPanel({ onClose, profile }: Props) {
                   <div className="bindings">
                     {ACTIONS.map(({ action, label }) => <KeybindRow key={action} action={action} label={label} code={s.bindings[action]} />)}
                   </div>
-                  <p className="muted hint">Arrow keys always drive too. Left mouse fires, right mouse launches a missile. The turret aims itself: it locks onto the car in front (look back to shoot behind).</p>
+                  <p className="muted hint">Arrow keys always drive too. The turret aims itself: it locks onto the car in front (look back to shoot behind).</p>
                 </section>
                 <section>
                   <h4>Gamepad</h4>

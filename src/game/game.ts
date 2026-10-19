@@ -120,7 +120,7 @@ export class Game {
     this.scene.add(this.effects.group);
     const night = THEMES[this.track.theme].night;
     this.nightLights = night ? new NightLights(this.scene, this.scenery.floodlights, quality === 'low' ? 2 : 5) : null;
-    this.inputs = new InputRouter(this.renderer.domElement, this.abort.signal, () => this.hud.get().phase === 'ready' && !this.paused);
+    this.inputs = new InputRouter(this.abort.signal, () => this.hud.get().phase === 'ready' && !this.paused);
     this.inputs.touch.autoAccelerate = settings.get().autoAccelerate;
     this.dynamicRes = TOUCH ? new DynamicResolution({ max: this.renderer.getPixelRatio() }) : null;
     this.resize = new ResizeObserver(() => this.fit());

@@ -134,8 +134,6 @@ function ControlsView() {
     <div className="panel-controls">
       <ul className="keys">
         {ACTIONS.map(({ action, label }) => <li key={action}><kbd>{keyLabel(s.bindings[action])}</kbd>{label}</li>)}
-        <li><kbd>Left mouse</kbd>Machine gun</li>
-        <li><kbd>Right mouse</kbd>Missile</li>
         <li><kbd>Esc</kbd>This menu</li>
       </ul>
       <p className="muted hint">The turret aims itself at the car in front. Keys can be changed in Settings → Controls. A gamepad works too: triggers drive, RB fires.</p>

@@ -35,12 +35,12 @@ What's in them:
   - wreck replays, high-visibility car outlines (bright rims in each car's colour, easier to tell apart than paint alone) and the Kenney models.
 - **The pause menu (Esc)** is the same menu over the race: Resume, the standings, the controls, Restart, Settings and Leave.
 
-| | Keyboard + mouse | Gamepad | Touch |
+| | Keyboard | Gamepad | Touch |
 | --- | --- | --- | --- |
 | Accelerate / brake, reverse | W / S (↑ / ↓) | RT / LT | automatic / BRAKE |
 | Steer | A D (← →) | left stick | drag on the left half |
-| Machine gun | left mouse / E | RB | FIRE |
-| Missile | right mouse / Q | LB | MSL |
+| Machine gun | J (hold) | RB | FIRE |
+| Missile | K | LB | MSL |
 | Rear defence | F | X | DROP |
 | Handbrake / nitro | Space / Shift | A / B | SLIDE / NOS |
 | Look back / respawn / pause | C / R / Esc | Y / Back / Start | — / ↺ / — |
