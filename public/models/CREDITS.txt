@@ -1,3 +1,18 @@
 Models from Kenney (www.kenney.nl), CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/):
 Car Kit 3.1, City Kit Industrial 2.0 and Racing Kit 2.0, rebuilt for Diff Race by scripts/build-cars.mjs
 and scripts/build-props.mjs.
+
+Surface textures from Poly Haven (polyhaven.com), CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/):
+asphalt_track, sandy_gravel, dirt_aerial_02, concrete_wall_008 and metal_plate, resized and recompressed
+for Diff Race by scripts/build-textures.mjs.
+
+Realistic props from Poly Haven (polyhaven.com), CC0 1.0: Barrel_01, Barrel_02, old_tyre, rock_07 and
+rock_09, simplified and their textures shrunk for Diff Race by scripts/build-real.mjs.
+
+The realistic car: "Car Concept" by Eric Chadwick, Darmstadt Graphics Group GmbH (2024), from the Khronos
+glTF Sample Assets (https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept), licensed
+CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Based on "Free Concept Car 004" by Unity Fan (CC0).
+Changed for Diff Race by scripts/build-real.mjs: the interior, wipers, number plate and brake callipers removed,
+the Khronos and 3D Commerce logos removed from the tyres, rims and mirrors, the meshes simplified, the materials
+made plain (no clear coat, transmission or variants) and the textures shrunk. The game repaints the body and
+bolts on armour. Khronos and 3D Commerce are trademarks of the Khronos Group; Diff Race isn't affiliated with it.

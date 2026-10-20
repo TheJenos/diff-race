@@ -50,7 +50,7 @@ export interface Settings {
   replays: boolean;
   /** Bright outlines round every car, for seeing them against busy scenery */
   outlines: boolean;
-  /** Draw cars and scenery with the Kenney kit models when they're installed (public/models/) */
+  /** Draw cars and scenery with the kit models when they're installed (public/models/): Kenney's, and the realistic ones above low quality */
   kitModels: boolean;
   /** KeyboardEvent.code for each action (arrow keys always steer and pedal too) */
   bindings: Bindings;
@@ -67,9 +67,9 @@ export const MOTION_OPTIONS: { value: MotionPref; label: string; hint: string }[
   { value: 'full', label: 'Off', hint: 'All animations' },
 ];
 export const QUALITIES: { value: Quality; label: string; hint: string }[] = [
-  { value: 'low', label: 'Low', hint: 'No shadows, lower resolution, sparse scenery' },
-  { value: 'medium', label: 'Medium', hint: 'Shadows, most scenery' },
-  { value: 'high', label: 'High', hint: 'Sharp shadows, full scenery, smooth edges (next race)' },
+  { value: 'low', label: 'Low', hint: 'No shadows, lower resolution, sparse scenery, simple textures' },
+  { value: 'medium', label: 'Medium', hint: 'Shadows, most scenery, photo textures and realistic props (next race)' },
+  { value: 'high', label: 'High', hint: 'Sharp shadows, full scenery, photo textures, realistic props and cars, smooth edges (next race)' },
 ];
 
 export const DEFAULT_BINDINGS: Bindings = {

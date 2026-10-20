@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { TrackData } from '../game/track/types';
 import { loadModels } from '../game/models';
+import { loadSurfaces } from '../game/surfaces';
 import { reducedMotion, settings } from '../game/settings';
 import { buildTrackScene, styleRenderer } from './trackScene';
 
@@ -54,8 +55,8 @@ export function TrackPreview({ track, fill = false }: Props) {
     }
     let disposed = false;
     let teardown = () => {};
-    // The Kenney props, if there are any, before the scenery is built (it's what the race shows).
-    void loadModels().then(() => {
+    // The Kenney props and photo textures, if there are any, before the scene is built (it's what the race shows).
+    void Promise.all([loadModels(), loadSurfaces()]).then(() => {
       if (disposed) return;
       teardown = show(el, renderer, track);
     });

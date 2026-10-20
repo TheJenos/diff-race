@@ -4,6 +4,7 @@ import { requestTrack } from '../game/track/client';
 import { specKey, type TrackSpec } from '../game/track/spec';
 import type { TrackData } from '../game/track/types';
 import { loadModels } from '../game/models';
+import { loadSurfaces } from '../game/surfaces';
 import { buildTrackScene, styleRenderer } from './trackScene';
 
 /** The track a spec makes (built in the worker; the same spec is built once), or null while it's coming */
@@ -65,7 +66,7 @@ function thumbnail(track: TrackData, size: number): Promise<string> {
   const job = queue.then(async () => {
     const again = cache.get(key);
     if (again) return again;
-    await loadModels();
+    await Promise.all([loadModels(), loadSurfaces()]);
     const r = thumbRenderer();
     // Drawn at twice the size at least, and shown smaller: smooth edges at any pixel density.
     const px = Math.round(size * Math.max(2, Math.min(3, window.devicePixelRatio || 1)));

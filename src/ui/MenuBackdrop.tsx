@@ -8,6 +8,7 @@ import { buildTrackMesh } from '../game/world/trackMesh';
 import { buildScenery } from '../game/world/sceneryMesh';
 import { Environment } from '../game/world/environment';
 import { loadModels } from '../game/models';
+import { loadSurfaces } from '../game/surfaces';
 import { reducedMotion, settings } from '../game/settings';
 import { TOUCH } from '../game/device';
 import { randomSeed } from './seeds';
@@ -72,7 +73,7 @@ export function MenuBackdrop({ delay = 1200 }: { delay?: number }) {
     if (!host || !ready) return;
     let disposed = false;
     let cleanup = () => {};
-    void Promise.all([requestTrack(spec), loadModels()]).then(([track]) => {
+    void Promise.all([requestTrack(spec), loadModels(), loadSurfaces()]).then(([track]) => {
       if (disposed) return;
       cleanup = fly(host, track, () => {
         setShown(true);

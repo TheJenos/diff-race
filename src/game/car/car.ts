@@ -64,6 +64,7 @@ export class Car {
     g.position.lerpVectors(this.prevPos, this.currPos, alpha);
     g.quaternion.slerpQuaternions(this.prevRot, this.currRot, alpha);
     this.view.updateWheels(this.body.wheels, this.body.steer);
+    this.view.flushDents();
     if (this.body.puppet) return;
     this.view.setBraking(this.braking);
     this.view.setNitro(this.body.nitroActive);

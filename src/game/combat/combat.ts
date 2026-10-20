@@ -68,6 +68,16 @@ interface Hazard {
   claiming?: boolean;
 }
 
+/**
+ * Which way a missile spins the car it hits, from where the blast was (car space: x right, z
+ * back): the end nearest the blast is shoved away from it, so a hit on the rear left swings the
+ * tail right and the nose left (positive, turning left seen from above). One dead on an axis
+ * goes either way.
+ */
+export function spinWay(x: number, z: number): number {
+  return Math.sign(-x * z) || (Math.random() < 0.5 ? -1 : 1);
+}
+
 const TRACERS = 160;
 const TRACER_LIFE = 0.05;
 
@@ -170,7 +180,7 @@ export class Combat {
     if (victim) {
       this.racers.boxOf(victim, this.box);
       toBoxSpace({ x: ex, y: ey, z: ez }, this.box, this.local);
-      this.racers.hurt(victim, roundDamage(r.gun, range), zoneAt(this.local.x, this.local.y - 0.2, this.local.z), r, 'gun', now);
+      this.racers.hurt(victim, roundDamage(r.gun, range), zoneAt(this.local.x, this.local.y - 0.2, this.local.z), r, 'gun', now, { x: ex, y: ey, z: ez, dx: d.x, dy: d.y, dz: d.z });
       this.events.hit(r, victim);
       if (Math.random() < 0.5) this.effects.sparks(ex, ey, ez, 2);
     } else if (range < GUN.maxRange && Math.random() < 0.25) {
@@ -321,11 +331,18 @@ export class Combat {
       const k = 1 - (dist / radius) * 0.67;
       this.racers.boxOf(r, this.box);
       toBoxSpace({ x, y, z }, this.box, this.local);
-      this.racers.hurt(r, damage * k, zoneAt(this.local.x, this.local.y, this.local.z), owner, source, now);
+      // The blast pushes in from where it went off.
+      const blow = dist > 0.05 ? { x, y, z, dx: dx / dist, dy: dy / dist, dz: dz / dist } : { x, y: y - 1, z, dx: 0, dy: 1, dz: 0 };
+      this.racers.hurt(r, damage * k, zoneAt(this.local.x, this.local.y, this.local.z), owner, source, now, blow);
       const l = Math.max(0.5, Math.hypot(dx, dz));
       const m = r.car.body.params.mass * push * k;
       r.car.body.body.applyImpulse({ x: (dx / l) * m * 0.6, y: m, z: (dz / l) * m * 0.6 }, true);
       r.car.body.body.applyTorqueImpulse({ x: (Math.random() - 0.5) * m * 0.6, y: 0, z: (Math.random() - 0.5) * m * 0.6 }, true);
+      if (source === 'missile') {
+        // k runs from 1 at the blast's centre to a third at its edge: the spin from 1 to `edge`.
+        const s = MISSILE.spin;
+        r.car.body.spinOut(spinWay(this.local.x, this.local.z) * s.rate * (s.edge + (1 - s.edge) * (k - 1 / 3) * 1.5), s.time);
+      }
     }
     this.blast(x, y, z, radius);
   }

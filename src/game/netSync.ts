@@ -1,6 +1,6 @@
 import type { RoomConnection } from '../net/room';
 import type { HazardRecord, PlayerRecord, ReceivedEvent } from '../net/records';
-import { decodeCar, encodeCar, FLAG, newSnapshot, type CarSnapshot } from '../net/carCodec';
+import { decodeCar, DENT_STEP, DENT_ZONES, encodeCar, FLAG, newSnapshot, packDents, unpackDents, type CarSnapshot } from '../net/carCodec';
 import { shouldSend } from '../net/sendPolicy';
 import type { Racer } from './racer';
 import type { Racers } from './racers';
@@ -80,6 +80,7 @@ export class NetSync {
     if (rec.n !== this.n) return;
     if (rec.p && typeof rec.t === 'number' && decodeCar(rec.p, this.snap)) {
       r.track.push(this.snap, rec.t, this.conn.serverNow());
+      if (this.snap.dents !== r.snap.dents) this.dents(r, r.snap.dents, this.snap.dents);
       Object.assign(r.snap, this.snap);
     }
     r.kills = rec.k ?? 0;
@@ -95,6 +96,22 @@ export class NetSync {
         this.racers.hurt(victim, total - before, null, r, 'gun', this.nowS());
       }
     }
+  }
+
+  /**
+   * Another client's car took more damage on some side: dent it there (its own client dented it
+   * where the blows landed; here, somewhere on that side). Less than before: it's a fresh car.
+   */
+  private dents(r: Racer, before: number, after: number): void {
+    let was = unpackDents(before);
+    const now = unpackDents(after);
+    if (now.some((v, i) => v < was[i]!)) {
+      r.car.view.repair();
+      was = now.map(() => 0);
+    }
+    now.forEach((v, i) => {
+      if (v > was[i]!) r.car.view.zoneImpact(DENT_ZONES[i]!, (v - was[i]!) * DENT_STEP, after * 7 + i);
+    });
   }
 
   private event(e: ReceivedEvent): void {
@@ -202,5 +219,6 @@ export function snapshotOf(r: Racer, out: CarSnapshot): CarSnapshot {
     | (r.input.brake > 0 && r.car.body.speed > 0.5 ? FLAG.braking : 0)
     | (r.spikes > 0 ? FLAG.spikes : 0)
     | (r.flaming > 0 ? FLAG.flame : 0);
+  out.dents = packDents(r.damage.zoneDamage);
   return out;
 }

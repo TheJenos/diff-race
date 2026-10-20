@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Game } from '../game/game';
 import { requestTrack } from '../game/track/client';
 import { loadModels } from '../game/models';
+import { loadSurfaces } from '../game/surfaces';
 import { errorMessage } from './errors';
 import { setupFor, type Session } from '../types';
 import type { RoomConnection } from '../net/room';
@@ -46,9 +47,9 @@ export function GameView({ session, room, playerName = 'Driver', onExit, onResta
     if (!el) return;
     let instance: Game | null = null;
     let cancelled = false;
-    // The track is built in a worker first (and the kit models loaded, if there are any); the game starts on it.
+    // The track is built in a worker first (and the kit models and photo textures loaded, if there are any); the game starts on it.
     const spec = session ? session.spec : trackOf(room!.race.settings);
-    Promise.all([requestTrack(spec), loadModels()]).then(([track]) => {
+    Promise.all([requestTrack(spec), loadModels(), loadSurfaces()]).then(([track]) => {
       if (cancelled) return;
       const setup = session ? setupFor(session) : roomSessionSetup(room!.conn, room!.race, room!.conn.view().lobby, playerName);
       instance = new Game(el, { track, setup });

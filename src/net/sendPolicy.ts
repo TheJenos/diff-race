@@ -35,7 +35,7 @@ const _p = { x: 0, y: 0, z: 0 };
 export function shouldSend(last: CarSnapshot | null, now: CarSnapshot, since: number): boolean {
   if (since < MIN_INTERVAL) return false;
   if (!last || since >= MAX_INTERVAL) return true;
-  if (last.flags !== now.flags || last.armour !== now.armour) return true;
+  if (last.flags !== now.flags || last.armour !== now.armour || last.dents !== now.dents) return true;
   predictPosition(last, since, _p);
   if (Math.hypot(_p.x - now.x, _p.y - now.y, _p.z - now.z) > POS_ERROR) return true;
   // Rotation predicted by the angular velocity is close enough at these intervals: compare directly

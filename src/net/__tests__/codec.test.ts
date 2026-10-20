@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CODEC_PATTERN, decodeCar, encodeCar, FLAG, newSnapshot } from '../carCodec';
+import { CODEC_PATTERN, decodeCar, DENT_STEP, encodeCar, FLAG, newSnapshot, packDents, unpackDents } from '../carCodec';
 import { shouldSend } from '../sendPolicy';
 
 const sample = () => {
@@ -25,6 +25,24 @@ describe('car codec', () => {
     expect(b.D).toBeCloseTo(a.D, 1);
     expect(b.armour).toBe(97);
     expect(b.flags).toBe(FLAG.firing | FLAG.nitro);
+  });
+
+  it('carries each zone\'s damage, so other clients can dent the car', () => {
+    const damage = { front: 37.4, rear: 0, left: 12, right: 200, roof: 3 };
+    const a = { ...sample(), dents: packDents(damage) };
+    const b = decodeCar(encodeCar(a), newSnapshot())!;
+    // In DENT_STEPs, rounded down, at most 63 of them.
+    expect(unpackDents(b.dents)).toEqual([Math.floor(37.4 / DENT_STEP), 0, 6, 63, 1]);
+  });
+
+  it('reads a pose from before dents were sent as undented', () => {
+    const old = encodeCar(sample()).split('.').slice(0, 17).join('.');
+    expect(decodeCar(old, newSnapshot())!.dents).toBe(0);
+  });
+
+  it('sends as soon as the car takes a dent', () => {
+    const a = sample();
+    expect(shouldSend(a, { ...a, dents: packDents({ front: 4, rear: 0, left: 0, right: 0, roof: 0 }) }, 100)).toBe(true);
   });
 
   it('is short and matches what the database rules accept', () => {

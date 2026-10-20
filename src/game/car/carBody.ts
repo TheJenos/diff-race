@@ -41,6 +41,9 @@ const FLIPPED_RESPAWN = 3;
 /** A puppet catches up with its predicted pose over this long (s) */
 const FOLLOW = 0.08;
 
+/** The tyres' grip while spun out: sliding, so a spin carries the car round */
+const SPIN_GRIP = 0.25;
+
 export class CarBody {
   readonly body: RapierBody;
   readonly colliders: RapierCollider[] = [];
@@ -60,6 +63,8 @@ export class CarBody {
   surfaceAt: SurfaceAt = () => 'road';
   /** Handling penalties from damage (car/damage.ts handlingOf) */
   mods = { steer: 1, topSpeed: 1, pull: 0 };
+  /** Seconds left of a spin-out (spinOut): the tyres slide and nothing straightens the car up */
+  spinning = 0;
   private readonly member: number;
 
   private readonly right = { x: 0, y: 0, z: 0 };
@@ -181,9 +186,23 @@ export class CarBody {
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
     this.steer = 0;
+    this.spinning = 0;
     this.flipped = false;
     this.flippedFor = 0;
     for (const wheel of this.wheels) wheel.compression = 0;
+  }
+
+  /**
+   * Knocked into a spin (a missile hit): turning at `rate` rad/s more about its own up axis
+   * (positive: to the left, seen from above), the tyres sliding for `seconds` so it goes round
+   * before they bite again.
+   */
+  spinOut(rate: number, seconds: number): void {
+    basis(this.body.rotation(), this.right, this.up, this.fwd);
+    const up = this.up;
+    const w = this.body.angvel();
+    this.body.setAngvel({ x: w.x + up.x * rate, y: w.y + up.y * rate, z: w.z + up.z * rate }, true);
+    this.spinning = Math.max(this.spinning, seconds);
   }
 
   /** One fixed step of driving: suspension, tyres, engine, aero, air control and self-righting. */
@@ -195,6 +214,7 @@ export class CarBody {
     const v = body.linvel();
     const { right, up, fwd } = this;
     basis(q, right, up, fwd);
+    if (this.spinning > 0) this.spinning = Math.max(0, this.spinning - dt);
     const speed = dot(v, fwd);
     this.speed = speed;
     const quarter = p.mass / 4;
@@ -292,7 +312,7 @@ export class CarBody {
         vLong,
         vLat,
         load,
-        mu: p.grip * SURFACE_GRIP[wheel.surface],
+        mu: p.grip * SURFACE_GRIP[wheel.surface] * (this.spinning > 0 ? SPIN_GRIP : 1),
         latGrip: handbrake ? p.handbrakeGrip : 1,
         mass: quarter,
         dt,
@@ -331,7 +351,7 @@ export class CarBody {
     }
 
     const av = body.angvel();
-    if (this.grounded >= 3 && !input.handbrake) {
+    if (this.grounded >= 3 && !input.handbrake && this.spinning <= 0) {
       // Yaw assist: ease off yaw beyond what the steering asks for, so the car straightens out.
       const wanted = (speed * Math.tan(this.steer)) / WHEELBASE;
       const yaw = -dot(av, up); // positive: turning right

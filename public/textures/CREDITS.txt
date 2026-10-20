@@ -1,0 +1,7 @@
+Surface textures from Poly Haven (polyhaven.com), CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/):
+  asphalt_track  https://polyhaven.com/a/asphalt_track
+  sandy_gravel  https://polyhaven.com/a/sandy_gravel
+  dirt_aerial_02  https://polyhaven.com/a/dirt_aerial_02
+  concrete_wall_008  https://polyhaven.com/a/concrete_wall_008
+  metal_plate  https://polyhaven.com/a/metal_plate
+Resized and recompressed for Diff Race by scripts/build-textures.mjs.

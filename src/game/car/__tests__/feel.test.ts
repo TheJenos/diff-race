@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { attitude, drive, flatWorld, speedOf } from './harness';
+import { PHYSICS_STEP } from '../../physics';
+import { MISSILE } from '../../combat/rules/weapons';
 
 /*
  * The car's feel, pinned. These are targets, not physics: a deliberate retune updates them.
@@ -93,5 +95,42 @@ describe('car on flat ground', () => {
     const upright = drive(physics, car, 4, {}, () => attitude(car).up.y > 0.9 && car.grounded >= 3);
     expect(upright).toBeLessThan(3);
     physics.dispose();
+  });
+});
+
+describe('spun by a missile', () => {
+  // How far round it goes: its heading's change, summed step by step so it counts past a half turn.
+  const turned = (physics: Parameters<typeof drive>[0], car: Parameters<typeof drive>[1], seconds: number) => {
+    let total = 0;
+    drive(physics, car, seconds, {}, () => {
+      total += car.body.angvel().y * PHYSICS_STEP;
+    });
+    return total;
+  };
+
+  it('goes round about a turn, the way it was spun, then grips again', async () => {
+    const { physics, car } = await flatWorld();
+    drive(physics, car, 2, {});
+    car.spinOut(MISSILE.spin.rate, MISSILE.spin.time);
+    const round = turned(physics, car, 4);
+    expect(round).toBeGreaterThan(Math.PI * 1.2);
+    expect(round).toBeLessThan(Math.PI * 4);
+    // Stopped by the end: it doesn't spin forever.
+    expect(Math.abs(car.body.angvel().y)).toBeLessThan(0.2);
+    physics.dispose();
+  });
+
+  it("spins far further than the same shove without the slide (the tyres would stop it)", async () => {
+    const a = await flatWorld();
+    drive(a.physics, a.car, 2, {});
+    a.car.spinOut(MISSILE.spin.rate, MISSILE.spin.time);
+    const spun = Math.abs(turned(a.physics, a.car, 4));
+    a.physics.dispose();
+    const b = await flatWorld();
+    drive(b.physics, b.car, 2, {});
+    b.car.spinOut(MISSILE.spin.rate, 0);
+    const gripped = Math.abs(turned(b.physics, b.car, 4));
+    b.physics.dispose();
+    expect(spun).toBeGreaterThan(gripped * 2);
   });
 });

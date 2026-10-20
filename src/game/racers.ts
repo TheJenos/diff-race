@@ -2,6 +2,7 @@ import { Racer } from './racer';
 import { GRAVITY, PHYSICS_STEP, type ContactForce, type PhysicsWorld } from './physics';
 import { applyDamage, handlingOf, regen, restore, type DamageSource, type HitResult, type Zone } from './car/damage';
 import { barrierDamage, crashDamage, SCRAPE_SPEED, scrapeDamage } from './car/collisionDamage';
+import { dentSize } from './car/deform';
 import { slew, anglesOf, TURRET } from './car/turret';
 import { stepProgress, resetTo, type ProgressEvent } from './race/progress';
 import { locate } from './track/locate';
@@ -54,6 +55,12 @@ const MAX_SPEED = 80;
 interface StepContact {
   other: Racer | 'barrier';
   force: number;
+}
+
+/** Where a blow came from and which way it pushed (world, unit direction): for the dent it leaves */
+export interface Blow {
+  x: number; y: number; z: number;
+  dx: number; dy: number; dz: number;
 }
 
 /** One crash in progress: the velocity change summed over the steps it lasts */
@@ -290,9 +297,13 @@ export class Racers {
     imp.done = true;
     const dv = Math.hypot(imp.dx, imp.dy, imp.dz);
     const zone = this.zoneOf(r, -imp.dx, -imp.dy, -imp.dz);
+    const t = r.car.body.body.translation();
     if (imp.other === 'barrier') {
       const amount = barrierDamage(dv, zone, this.rules.crash);
-      if (amount > 0) this.hurt(r, amount, zone, null, 'barrier', now);
+      // The wall pushed the car the way its velocity changed: the blow came from the far side of that.
+      const k = 1 / Math.max(1e-6, dv);
+      const blow = { x: t.x - imp.dx * k * 6, y: t.y - imp.dy * k * 6, z: t.z - imp.dz * k * 6, dx: imp.dx * k, dy: imp.dy * k, dz: imp.dz * k };
+      if (amount > 0) this.hurt(r, amount, zone, null, 'barrier', now, blow);
       return;
     }
     const other = imp.other;
@@ -301,7 +312,10 @@ export class Racers {
       rule: this.rules.crash, ghost: r.ghost(now), otherNitro: other.car.body.nitroActive, otherArmed: other.gun.armed > 0,
       otherSpikes: other.spiked, selfSpikes: r.spiked,
     });
-    if (amount > 0) this.hurt(r, amount, zone, other, 'ram', now);
+    // From the other car's middle toward this one's: a corner-on hit lands on the corner.
+    const o = other.car.body.body.translation();
+    const l = Math.max(1e-6, Math.hypot(t.x - o.x, t.y - o.y, t.z - o.z));
+    if (amount > 0) this.hurt(r, amount, zone, other, 'ram', now, { x: o.x, y: o.y, z: o.z, dx: (t.x - o.x) / l, dy: (t.y - o.y) / l, dz: (t.z - o.z) / l });
   }
 
   /** Sliding along another car (or a barrier at speed) wears both down */
@@ -340,8 +354,11 @@ export class Racers {
 
   // ---------------------------------------------------------------- damage, wrecks, respawns
 
-  /** Damage `r`; a wreck is handled here (the killer credited, the car taken out) */
-  hurt(r: Racer, amount: number, zone: Zone | null, attacker: Racer | null, source: DamageSource, now: number): void {
+  /**
+   * Damage `r`; a wreck is handled here (the killer credited, the car taken out). With a `blow`,
+   * the car dents where it landed (another client's car dents from what its own client sends).
+   */
+  hurt(r: Racer, amount: number, zone: Zone | null, attacker: Racer | null, source: DamageSource, now: number, blow?: Blow): void {
     if (attacker === r) attacker = null;
     if (r.remote) {
       // Its own client applies it: record what we did, and it arrives with our next state.
@@ -353,12 +370,24 @@ export class Racers {
     }
     if (r.wrecked || r.ghost(now) || amount <= 0) return;
     const result = applyDamage(r.damage, amount, zone, attacker?.id ?? null, source, now);
-    if (result.levelUp) r.car.view.dent(result.levelUp, r.damage.levels[result.levelUp]);
+    const size = blow ? dentSize(source, amount) : null;
+    if (blow && size) this.dent(r, blow, size.depth, size.radius);
+    if (result.levelUp) r.car.view.loosen(result.levelUp, r.damage.levels[result.levelUp]);
     this.events.hurt(r, attacker, amount, source, result);
     if (result.wrecked) {
       const killer = result.killer ? this.get(result.killer) ?? null : null;
       this.wreck(r, killer, result.source, now);
     }
+  }
+
+  /** A blow's dent, the blow taken into car space (as the car's drawn, where it was hit) */
+  private dent(r: Racer, b: Blow, depth: number, radius: number): void {
+    const g = r.car.view.group;
+    const q = g.quaternion;
+    const inv = { x: -q.x, y: -q.y, z: -q.z, w: q.w };
+    const p = rotate(inv, { x: b.x - g.position.x, y: b.y - g.position.y, z: b.z - g.position.z }, { x: 0, y: 0, z: 0 });
+    const d = rotate(inv, { x: b.dx, y: b.dy, z: b.dz }, { x: 0, y: 0, z: 0 });
+    r.car.view.impact(p.x, p.y, p.z, d.x, d.y, d.z, depth, radius);
   }
 
   private wreck(r: Racer, killer: Racer | null, source: DamageSource, now: number): void {
@@ -383,8 +412,11 @@ export class Racers {
     r.car.body.setActive(true);
     this.place(r, s, 0);
     resetTo(r.progress, r.loc.s, this.track.lapLength);
-    if (fromWreck) restore(r.damage);
-    r.car.view.reset(r.damage.levels);
+    // A wreck brings a fresh car; a car put back after a flip or getting stuck keeps its dents.
+    if (fromWreck) {
+      restore(r.damage);
+      r.car.view.repair();
+    }
     r.wreckedAt = null;
     r.ghostUntil = now + GHOST_TIME;
     r.car.body.setGhost(true);

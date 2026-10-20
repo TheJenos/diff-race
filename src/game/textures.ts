@@ -14,6 +14,13 @@ export const TILE: Record<TextureName, number> = {
   asphalt: 8, gravel: 4, ground: 16, concrete: 3, stripes: 2, kerb: 2, checker: 2, metal: 2, spikes: 1,
 };
 
+/**
+ * The average of each noisy texture as drawn (linear light), measured once: a photo surface
+ * standing in for one (surfaces.ts) is tinted to come out this bright on average, times the
+ * theme's tint, so swapping one for the other keeps each theme's colours.
+ */
+export const MEAN = { asphalt: 0.4947, gravel: 0.5115, ground: 0.4893, concrete: 0.6914, metal: 0.3268 } as const;
+
 // ---------------------------------------------------------------- noise
 
 /** Small deterministic PRNG so every client draws identical textures. */
@@ -183,6 +190,28 @@ const PAINTERS: Partial<Record<TextureName, { size: number; paint: Painter }>> =
     }),
   },
 };
+
+let noiseTex: THREE.DataTexture | null = null;
+
+/** Broad, smooth noise (0..1 in red), tileable: for breaking up a texture's repeats (surfaces.ts) */
+export function noiseTexture(): THREE.DataTexture {
+  if (noiseTex) return noiseTex;
+  const size = 128;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const v = Math.round(fbm((x / size) * 4, (y / size) * 4, 4, 4) * 255);
+      data.set([v, v, v, 255], (y * size + x) * 4);
+    }
+  }
+  noiseTex = new THREE.DataTexture(data, size, size);
+  noiseTex.wrapS = noiseTex.wrapT = THREE.RepeatWrapping;
+  noiseTex.magFilter = THREE.LinearFilter;
+  noiseTex.minFilter = THREE.LinearMipmapLinearFilter;
+  noiseTex.generateMipmaps = true;
+  noiseTex.needsUpdate = true;
+  return noiseTex;
+}
 
 const cache = new Map<TextureName, THREE.CanvasTexture>();
 

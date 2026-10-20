@@ -85,7 +85,7 @@ export function SettingsPanel({ onClose, profile }: Props) {
                   <Choices label="Quality" value={s.quality} options={QUALITIES.map((q) => ({ value: q.value as Quality, label: q.label, title: q.hint }))}
                     onChange={(quality) => settings.update({ quality })} />
                   <p className="muted hint">{QUALITIES.find((q) => q.value === s.quality)?.hint}</p>
-                  <Toggle label="Kenney models for cars and scenery (from the next race)" value={s.kitModels} onChange={(v) => settings.update({ kitModels: v })} />
+                  <Toggle label="3D models for cars and scenery: Kenney's, and realistic ones above Low (from the next race)" value={s.kitModels} onChange={(v) => settings.update({ kitModels: v })} />
                   <Toggle label="High-visibility car outlines" value={s.outlines} onChange={(v) => settings.update({ outlines: v })} />
                 </section>
                 <section>

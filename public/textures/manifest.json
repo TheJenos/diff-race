@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "source": "Poly Haven (polyhaven.com), CC0 1.0",
+  "sets": {
+    "asphalt": {
+      "id": "asphalt_track",
+      "metres": 3,
+      "mean": [
+        0.2601,
+        0.2113,
+        0.1878
+      ],
+      "color": "asphalt/color.jpg",
+      "normal": "asphalt/normal.jpg",
+      "arm": "asphalt/arm.jpg"
+    },
+    "gravel": {
+      "id": "sandy_gravel",
+      "metres": 1.5,
+      "mean": [
+        0.246,
+        0.2166,
+        0.1772
+      ],
+      "color": "gravel/color.jpg",
+      "normal": "gravel/normal.jpg",
+      "arm": "gravel/arm.jpg"
+    },
+    "ground": {
+      "id": "dirt_aerial_02",
+      "metres": 40,
+      "mean": [
+        0.3421,
+        0.1966,
+        0.092
+      ],
+      "color": "ground/color.jpg",
+      "normal": "ground/normal.jpg",
+      "arm": "ground/arm.jpg"
+    },
+    "concrete": {
+      "id": "concrete_wall_008",
+      "metres": 3,
+      "mean": [
+        0.2454,
+        0.2196,
+        0.1489
+      ],
+      "color": "concrete/color.jpg",
+      "normal": "concrete/normal.jpg",
+      "arm": "concrete/arm.jpg"
+    },
+    "metal": {
+      "id": "metal_plate",
+      "metres": 1.5,
+      "mean": [
+        0.3002,
+        0.2107,
+        0.0764
+      ],
+      "color": "metal/color.jpg",
+      "normal": "metal/normal.jpg",
+      "arm": "metal/arm.jpg"
+    }
+  }
+}

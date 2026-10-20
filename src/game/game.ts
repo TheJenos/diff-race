@@ -29,6 +29,7 @@ import { GUN, type DefenceKind } from './combat/rules/weapons';
 import type { Racer } from './racer';
 import { Replay } from './replay';
 import { AutoAim } from './autoAim';
+import { useReflections } from './car/carMesh';
 
 /*
  * One race on one track: owns the renderer, the scene, the physics world and the frame loop, and
@@ -110,6 +111,7 @@ export class Game {
     this.renderer = createRenderer(quality);
     container.appendChild(this.renderer.domElement);
     this.env = new Environment(this.scene, THEMES[this.track.theme], quality);
+    useReflections(THEMES[this.track.theme]);
     this.trackMesh = buildTrackMesh(this.track, quality !== 'low');
     this.scene.add(this.trackMesh.group);
     this.pickups = new PadPickups(this.track);

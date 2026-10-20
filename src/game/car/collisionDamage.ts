@@ -3,7 +3,7 @@ import type { Zone } from './damage';
 /*
  * How much a crash hurts. Pure: from the velocity change it gave the car (Δv, m/s), the zone it
  * hit and a few modifiers. Both cars in a crash work out their own damage this way; the armoured
- * front plate means the car that does the ramming comes off far better.
+ * front means the car that does the ramming comes off far better.
  */
 
 /** Below this velocity change a bump is just a bump (sparks and a thud) */

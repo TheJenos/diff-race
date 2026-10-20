@@ -46,6 +46,11 @@ export const MISSILE = {
    * `turn` rad/s, leading it by up to `lead` s, and bursts within `fuse` (m) of it.
    */
   seek: { cone: 0.6, range: 140, turn: 2.2, lead: 0.5, fuse: 2.4 },
+  /**
+   * A hit spins the car round: `rate` rad/s about its up axis at the blast's centre (down to
+   * `edge` of that at the splash's edge), its tyres sliding for `time` s so it goes right round
+   */
+  spin: { rate: 8.5, edge: 0.55, time: 1.7 },
 };
 
 export type DefenceKind = 'oil' | 'smoke' | 'napalm' | 'mines' | 'flame';

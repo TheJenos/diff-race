@@ -60,7 +60,7 @@ export function buildScenery(t: TrackData, quality: Quality, shadows: boolean): 
   for (const [key, items] of buckets) {
     const kind = key.split('|')[0] as string;
     const geo = propGeometry(kind);
-    const parts: [THREE.BufferGeometry, THREE.Material][] = [[geo.body, body]];
+    const parts: [THREE.BufferGeometry, THREE.Material][] = [[geo.body, geo.material ?? body]];
     if (geo.glow) parts.push([geo.glow, glow]);
     for (const [g, mat] of parts) {
       const inst = new THREE.InstancedMesh(g, mat, items.length);
@@ -73,8 +73,8 @@ export function buildScenery(t: TrackData, quality: Quality, shadows: boolean): 
       inst.instanceMatrix.needsUpdate = true;
       if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
       inst.computeBoundingSphere();
-      inst.castShadow = shadows && mat === body;
-      inst.receiveShadow = mat === body;
+      inst.castShadow = shadows && mat !== glow;
+      inst.receiveShadow = mat !== glow;
       inst.matrixAutoUpdate = false;
       group.add(inst);
       meshes.push(inst);

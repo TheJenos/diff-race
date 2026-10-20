@@ -5,7 +5,8 @@
  *
  *   x.y.z (cm) . qx.qy.qz (rotation, smallest-three ×10000, w ≥ 0) . vx.vy.vz (cm/s)
  *   . wx.wy.wz (angular, mrad/s) . turret yaw.pitch (mrad) . D (race distance, dm)
- *   . armour . flags
+ *   . armour . flags . dents
+ * `dents` came later: a string without it decodes as no dents.
  */
 
 export interface CarSnapshot {
@@ -17,6 +18,25 @@ export interface CarSnapshot {
   D: number;
   armour: number;
   flags: number;
+  /** Damage taken per zone, packed (packDents): other clients dent the car to match */
+  dents: number;
+}
+
+/** Zone damage per 6 bits, in this order (car/damage.ts's zones), in steps of DENT_STEP, up to 63 steps */
+export const DENT_ZONES = ['front', 'rear', 'left', 'right', 'roof'] as const;
+export const DENT_STEP = 2;
+
+export function packDents(damage: Readonly<Record<(typeof DENT_ZONES)[number], number>>): number {
+  let n = 0;
+  DENT_ZONES.forEach((z, i) => {
+    n += Math.min(63, Math.max(0, Math.floor(damage[z] / DENT_STEP))) * 64 ** i;
+  });
+  return n;
+}
+
+/** Each zone's damage (in DENT_STEPs), in DENT_ZONES order */
+export function unpackDents(n: number): number[] {
+  return DENT_ZONES.map((_, i) => Math.floor(n / 64 ** i) % 64);
 }
 
 export const FLAG = {
@@ -46,6 +66,7 @@ export function encodeCar(c: CarSnapshot): string {
     enc(c.D * 10),
     enc(Math.max(0, c.armour)),
     enc(c.flags),
+    enc(c.dents),
   ].join('.');
 }
 
@@ -70,11 +91,12 @@ export function decodeCar(s: string, out: CarSnapshot): CarSnapshot | null {
   out.D = dec(p[14]) / 10;
   out.armour = dec(p[15]);
   out.flags = dec(p[16]);
+  out.dents = dec(p[17]);
   return out;
 }
 
 export const newSnapshot = (): CarSnapshot => ({
-  x: 0, y: 0, z: 0, qx: 0, qy: 0, qz: 0, qw: 1, vx: 0, vy: 0, vz: 0, wx: 0, wy: 0, wz: 0, yaw: 0, pitch: 0, D: 0, armour: 0, flags: 0,
+  x: 0, y: 0, z: 0, qx: 0, qy: 0, qz: 0, qw: 1, vx: 0, vy: 0, vz: 0, wx: 0, wy: 0, wz: 0, yaw: 0, pitch: 0, D: 0, armour: 0, flags: 0, dents: 0,
 });
 
 /** What the database rules accept for a pose string */

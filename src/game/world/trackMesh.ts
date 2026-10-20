@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { texture, TILE } from '../textures';
+import { texture, TILE, type TextureName } from '../textures';
+import { breakUpTiling, surfaceDetail, surfaceParams, type SurfaceName } from '../surfaces';
 import { THEMES } from '../track/themes';
 import type { TrackData } from '../track/types';
 import { BARRIER_HEIGHT, BARRIER_THICK, groundY } from './trackPhysics';
@@ -12,7 +13,8 @@ import { frameAt, newFrame } from '../track/sample';
  * line and the ground. Everything along the loop is built in chunks of CHUNK samples, one mesh
  * per material per chunk, so frustum culling skips the parts behind the camera. The road and
  * verge use exactly the vertices of the physics trimesh (trackPhysics.ts), so wheels sit on what
- * you see.
+ * you see. Road, verge, ground, concrete and metal are photo-scanned where those are loaded
+ * (surfaces.ts), procedural otherwise; the paint over them takes on their relief.
  */
 
 /** Two of the data's chunks per drawn piece: fewer draw calls, still culled by the half-lap */
@@ -70,8 +72,18 @@ function ribbon(t: TrackData, i0: number, count: number, profile: Profile, tileA
   return g;
 }
 
-function material(name: Parameters<typeof texture>[0], color: number, extra: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {
-  return new THREE.MeshStandardMaterial({ map: texture(name), color, roughness: 0.92, metalness: 0, ...extra });
+const PHOTO: readonly TextureName[] = ['asphalt', 'gravel', 'ground', 'concrete', 'metal'];
+
+/**
+ * A surface tinted `color`: photo-scanned if it's loaded, else the procedural texture. `breakUp`:
+ * break up a photo surface's repeats with noise this many repeats across (surfaces.ts; not a whole
+ * number, so the noise and the tiles never fall into step).
+ */
+function material(name: TextureName, color: number, extra: THREE.MeshStandardMaterialParameters = {}, breakUp = 0): THREE.MeshStandardMaterial {
+  const photo = PHOTO.includes(name) ? surfaceParams(name as SurfaceName, color, TILE[name]) : null;
+  if (!photo) return new THREE.MeshStandardMaterial({ map: texture(name), color, roughness: 0.92, metalness: 0, ...extra });
+  const m = new THREE.MeshStandardMaterial({ ...photo, metalness: 0, ...extra });
+  return breakUp ? breakUpTiling(m, breakUp) : m;
 }
 
 export interface TrackMesh {
@@ -85,15 +97,15 @@ export function buildTrackMesh(t: TrackData, shadows: boolean): TrackMesh {
   group.name = 'track';
   const decal = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 };
   const mats = {
-    road: material('asphalt', palette.road),
-    verge: material('gravel', palette.verge),
+    road: material('asphalt', palette.road, {}, 9.37),
+    verge: material('gravel', palette.verge, {}, 7.73),
     barrier: material('concrete', palette.barrier, { side: THREE.DoubleSide }),
-    stripe: material('stripes', palette.stripe, { side: THREE.DoubleSide, ...decal }),
-    kerb: material('kerb', 0xffffff, decal),
-    checker: material('checker', 0xffffff, decal),
-    ground: material('ground', palette.ground),
-    skirt: material('ground', palette.ground, { side: THREE.DoubleSide }),
-    ramp: material('metal', 0x8a8c90, { roughness: 0.55, metalness: 0.6 }),
+    stripe: material('stripes', palette.stripe, { side: THREE.DoubleSide, ...decal, ...surfaceDetail('concrete', STRIPE_BAND, TILE.stripes) }),
+    kerb: material('kerb', 0xffffff, { ...decal, ...surfaceDetail('concrete', KERB_WIDTH, TILE.kerb) }),
+    checker: material('checker', 0xffffff, { ...decal, ...surfaceDetail('asphalt', TILE.checker) }),
+    ground: material('ground', palette.ground, {}, 4.61),
+    skirt: material('ground', palette.ground, { side: THREE.DoubleSide }, 4.61),
+    ramp: material('metal', 0x8a8c90, { roughness: 0.7, metalness: 0.5 }),
     paint: new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.8, ...decal }),
   };
   const geometries: THREE.BufferGeometry[] = [];

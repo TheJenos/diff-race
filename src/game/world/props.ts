@@ -16,6 +16,8 @@ export interface PropGeometry {
   glow: THREE.BufferGeometry | null;
   /** Whether instances get a colour of their own (containers come in many) */
   tinted: boolean;
+  /** A realistic model's own textured material (models.ts); without one, the body's colours are in its vertices */
+  material?: THREE.MeshStandardMaterial;
 }
 
 type Part = { g: THREE.BufferGeometry; color: number };
@@ -160,10 +162,28 @@ const BUILDERS: Record<string, () => PropSpec> = {
 
 const cache = new Map<string, PropGeometry>();
 
-/** The geometry for a kind: a kit model's when one's loaded (models.ts), else built once. Unknown kinds draw as a crate. */
+const borrowed = new WeakMap<PropGeometry, PropGeometry>();
+
+/**
+ * The geometry for a kind: a kit model's when one's loaded (models.ts), else built once. Unknown
+ * kinds draw as a crate. A realistic model has nothing glowing of its own: it borrows the
+ * procedural prop's glow (a fire barrel's flames).
+ */
 export function propGeometry(kind: string): PropGeometry {
   const kit = propModel(kind);
-  if (kit) return kit;
+  if (kit && (!kit.material || kit.glow)) return kit;
+  if (kit) {
+    let g = borrowed.get(kit);
+    if (!g) {
+      g = { ...kit, glow: procedural(kind).glow };
+      borrowed.set(kit, g);
+    }
+    return g;
+  }
+  return procedural(kind);
+}
+
+function procedural(kind: string): PropGeometry {
   let g = cache.get(kind);
   if (!g) {
     const crate = (): PropSpec => ({ body: [{ g: box(1.5, 1.5, 1.5), color: 0x8a6a40 }] });

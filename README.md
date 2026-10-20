@@ -32,7 +32,7 @@ What's in them:
 - **Rooms and Create room** (with a database): the open rooms, live, and the same steps to make one. Join by code from the rail.
 - **Settings**, at the foot of the rail:
   - controls, video, camera and sound;
-  - wreck replays, high-visibility car outlines (bright rims in each car's colour, easier to tell apart than paint alone) and the Kenney models.
+  - wreck replays, high-visibility car outlines (bright rims in each car's colour, easier to tell apart than paint alone) and the 3D models (Kenney's and the realistic ones).
 - **The pause menu (Esc)** is the same menu over the race: Resume, the standings, the controls, Restart, Settings and Leave.
 
 | | Keyboard | Gamepad | Touch |
@@ -63,7 +63,7 @@ What's in them:
   - It turns after the car at a limited rate and bursts when it gets within 2.4 m.
   - A hard swerve at close range can make it overshoot. Driving into smoke, or dropping it behind you, shakes it off, and so does a wreck or a respawn.
   - With nothing to lock onto, it flies straight.
-- **Sword pads (red)** sometimes bolt **ram spikes** onto your front plate for 12 s: your rams hit ×1.6 harder, and your front takes half.
+- **Sword pads (red)** sometimes bolt **ram spikes** onto your nose for 12 s: your rams hit ×1.6 harder, and your front takes half.
 - **Shield pads (blue):** patch 25 armour and mend the worst-damaged panel. You also get one rear defence: oil slick, smoke screen, napalm, three mines or a **flamethrower** (3 s of fire out the back, 14 m long). Leaders tend to get oil, mines and the flamethrower, the back of the pack smoke and napalm.
 - **Skull pads (green):** a trap for whoever's ahead. A wall of fire springs up across the road 85 m on, for 5 s. Its kills are yours.
 - **Placement:** about half the pads sit off the racing line, so grabbing one costs you position.
@@ -73,8 +73,11 @@ What's in them:
 - **Every car-to-car hit damages both cars,** by how hard it was (the velocity change) and where it landed.
 - **Zones:** the armoured front takes ×0.4, sides ×1, the rear ×1.2. The rammer comes off far better.
 - **Grinding** door to door wears both cars down. Barriers hurt only real impacts.
-- **Visible damage:**
-  - Dents show where you've been hit; panels hang loose, then fall off.
+- **Visible damage:** the car deforms where each blow lands (`src/game/car/deform.ts`).
+  - A hard ram caves a panel in, a missile or mine leaves a wide crater, and bullets pit the paint. Each one's depth and width follow how much it hurt, crumpled in smooth folds, up to about 30 cm deep however often it's hit.
+  - The body, glass and trim deform together, so nothing comes apart. The rear wing hangs loose, then falls off.
+  - Other players' cars dent too: each car sends its damage per side with its position, and other clients dent that side to match.
+  - A wreck brings a fresh car; being put back after a flip keeps the dents.
   - A smashed front, rear or side makes the car steer, top out or pull worse until you respawn.
 - **Crash rule** in a room: off ("bumper cars"), normal, or carnage (×2).
 
@@ -162,6 +165,33 @@ What each script does:
   - The armour plates, ram, wing and turret stay procedural, and the guns fire from where the turret sits. The physics car and its hitbox don't change.
 - **`build:props`** follows `scripts/props.config.mjs`, which maps scenery kinds to models, sizes and copies (a container stack, a row of grandstand sections). `npm run build:props -- --list` shows every model in the packs.
 - **Both** quantise the meshes (KHR_mesh_quantization), which halves the download.
+
+## Realistic models
+
+Where `public/models/real/` is there (about 2.9 MB, in the repo), realistic models take over from the kit ones:
+- **Props** (Poly Haven, CC0), on Medium and High: red hazard drums (`Barrel_01`), a rusty fire barrel (`Barrel_02`, still with the game's flames), stacks of worn tyres (`old_tyre`) and the quarry's rocks (`rock_07`, `rock_09`, made matte and red). They keep their own textures. Containers, cranes, warehouses and the rest stay Kenney's or procedural.
+- **The car**, on High: Khronos's [Car Concept](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept) (Eric Chadwick, CC BY 4.0), in every racer's paint. It's clear-coated metallic and reflects the theme's sky (`src/game/world/sky.ts`). The physics car, the hitbox, the armour, the turret and the dents are the same as on any kit car. It's about 43k triangles, roughly ten times a kit car, so lower tiers keep the Kenney cars.
+- **Turning them off:** the same **Settings → Video** toggle as the Kenney models. The e2e tests skip them, as they skip the photo textures.
+
+### Rebuilding them
+1. Put the sources in `assets-src/` (git-ignored):
+   - each Poly Haven prop's glTF (1k: `<id>.gltf`, `<id>.bin` and `textures/`) in `assets-src/polyhaven-models/<id>/`;
+   - `CarConcept.glb` (from `Models/CarConcept/glTF-Binary/` in the Khronos repo) in `assets-src/khronos/`.
+2. Run `npm run build:real` (macOS: it uses `sips`).
+
+It simplifies the meshes with meshoptimizer (the car from 213k triangles to 43k) and shrinks the textures to JPEGs. It also strips the car's interior, wipers, number plate, brake callipers and the Khronos logos (on the tyre walls, the rims and the plate), and makes its materials plain PBR. Its parts come out in car space, like a kit car's: `paint`, `trim` (one primitive per material) and `wheel`.
+
+## Photo textures
+
+The road, verge, ground, concrete barriers and metal (ramps, armour plates) use photo-scanned textures from Poly Haven (CC0, https://polyhaven.com): `asphalt_track`, `sandy_gravel`, `dirt_aerial_02`, `concrete_wall_008` and `metal_plate`. They're built into `public/textures/` (about 3.2 MB), which belongs in the repo.
+- **Each surface** has a colour map, a normal map (grit, cracks and seams catch the light) and an ARM map (occlusion and roughness).
+- **Theme colours:** each surface is tinted so its average matches what the procedural texture gave, so the themes keep their palettes.
+- **No visible tiling:** the road, verge and ground hide their repeats with noise bands that shift the texture by a different offset in each band (`breakUpTiling` in `src/game/surfaces.ts`).
+- **What stays procedural:** everything on **Low** quality (to save video memory on phones), in the e2e tests, and when `public/textures/` is missing. Kerbs, hazard stripes and the start line keep their painted patterns, with the concrete or asphalt relief under them.
+
+### Rebuilding them
+1. Download each texture's 1k JPGs from Poly Haven (colour, OpenGL normal and ARM: `<id>_diff_1k.jpg`, `<id>_nor_gl_1k.jpg`, `<id>_arm_1k.jpg`) into `assets-src/polyhaven/`.
+2. Run `npm run build:textures` (macOS: it uses `sips`). It resizes and recompresses the maps, evens out each colour map's brightness so dark asphalt keeps its detail, and writes `public/textures/manifest.json` with each surface's size in metres and average colour.
 
 ## Checks
 
